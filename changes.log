@@ -1,0 +1,48 @@
+##########################################################################
+# Yet Another Monitor (YAMon)
+# Copyright (c) 2013-present Al Caughey
+# All rights reserved.
+#
+# Summary of changes in YAMon
+
+* History
+  > 2020-01-26: 4.0.7
+    + a number of changes in various files to better support Tomato (thx to tvlz for this)
+	+ fixed users_created error
+  > 2020-01-26: 4.0.6
+    + get acRules based upon firmware (in end-of-hour)
+	+ added logging to WriteConfigFile; changed logic to create js directory in SetWebDirectories (in start)
+	+ replaced all non-alpha chars with _ in t_interfaces (rather than just -) in CalculateInterfaceTotals (in dailytotals)
+	+ minor update to install.sh to follow symlinks when checking read permission 
+	+ only log unmatched traffic if _logNoMatchingMac=1 (re-added to config.file; change in setupIPChains & check-network)
+	+ added device traffic to live data file
+	+ fixed issue with non-alpha characters in interface name (dailytotals)
+	+ fixed issue with too long variable value (prompts)
+	+ fixed issue(s) with missing values in config.file (defensively adding defaults) - (setPaths and elsewhere)
+	+ fixed issue with incorrect interface totals in monthly data file
+	+ added run-fixes.sh to manually launch /includes/fixes.sh; also added to aliases
+	+ a number of tweaks in compare.sh
+	+ fixed issue in block.sh for dd-wrt
+  > 2019-12-23: 4.0.5
+    + added block/unblock to aliases
+	+ fixed a significant issue with interface totals
+	+ added log messages; added JS to head of tmplogFile (in end of hour)
+	+ added symlinks for day and hour logs  (in new-day)
+	+ minor changes in setup
+	+ added links to latest log and log for current day
+	+ added CalculateInterfaceTotals; removed brace brackets around memory (in dailytotals)
+  > 2019-11-24: 4.0.4
+	+ added version # into the history of every .sh file (as above)
+	+ added (Al specific) admin, housekeeping & backup functionality (uprev.sh)... you
+	  won't see this on your routers but hopefully will have a better experience
+	+ re-added /dev environment for v4
+    + uprev'd the version because structure of hourly data file changed (traffic.sh)
+	+ fixed spurious tar error messages in the log (end-of-day.sh)
+	+ added web side and router side functionality to sync group names (check-network.sh)
+	+ added web side and router side functionality for access restrictions (web site)
+	+ first generally available version of access restrictions (block.sh, web site)
+	 
+  #to-do list 
+	- testing testing testing... esp for access restrictions
+	- re-build a lot of the report functionality
+	- bugs???

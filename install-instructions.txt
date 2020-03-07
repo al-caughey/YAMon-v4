@@ -1,0 +1,99 @@
+Welcome to the initial beta for YAMon v4. 
+I have not started the setup/install script yet so you'll have to do things manually.
+
+See http://usage-monitoring.com/v4-beta.php for more info as it becomes available
+
+Here's the rough steps
+* update your router firmware to the current/latest version
+* connect to the router using WinSCP or equivalent
+* create a new directory for YAMon v4
+	mkdir /opt/YAMon4
+* copy contents of zip file to /opt/YAMon4
+* open /opt/YAMon4/config.file and tweak settings as required for your network 
+	-> in particular, add/set a value for _updateTraffic --> e.g., _updateTraffic=4 (#the number of minutes between checks for traffic on the network... this replaces _check4Devices & _publishInterval)
+	-> also make sure that firmware is set correctly
+		
+* give the files execute permission
+	chmod +x /opt/YAMon4/*.sh
+
+If you want a fresh restart (after previously running YAMonv4, run
+	/opt/YAMon4/clear-iptables.sh
+
+(maybe run it twice... the second time, you should see a lot of `nothing to clear` entries)
+
+Now, start the new script, run
+	/opt/YAMon4/start.sh
+
+
+Check that things have been created properly, first enter:
+	ls -la /tmp/www
+You should see(maybe without the YAMon3.4 entries)
+	lrwxrwxrwx    1 root     root            19 Oct 14 09:38 css -> /opt/YAMon4/www/css
+	lrwxrwxrwx    1 root     root            16 Oct  2 15:44 data3 -> /opt/YAMon3/data
+	lrwxrwxrwx    1 root     root            16 Oct 14 09:38 data4 -> /opt/YAMon4/data
+	lrwxrwxrwx    1 root     root            22 Oct 14 09:38 images -> /opt/YAMon4/www/images
+	lrwxrwxrwx    1 root     root            29 Oct 14 09:38 index.html -> /opt/YAMon4/www/yamon4.0.html
+	drwxr-xr-x    2 root     root           160 Oct 14 09:38 js
+	lrwxrwxrwx    1 root     root            16 Oct 14 09:38 logs -> /opt/YAMon4/logs
+
+Then enter:
+	ls -la /tmp/www/js/
+You should see (maybe without the YAMon3.4 entries)
+	-rw-r--r--    1 root     root          7169 Oct 14 09:02 alerts.js
+	lrwxrwxrwx    1 root     root            31 Oct  2 15:44 config3.4.js -> /opt/YAMon3/www/js/config3.4.js
+	lrwxrwxrwx    1 root     root            31 Oct 14 09:38 config4.0.js -> /opt/YAMon4/www/js/config4.0.js
+	-rw-r--r--    1 root     root         93882 Oct 14 09:40 live_data3.js
+	-rw-r--r--    1 root     root         68154 Oct 14 09:40 live_data4.js
+	lrwxrwxrwx    1 root     root            28 Oct  2 15:44 router.js -> /opt/YAMon3/www/js/router.js
+And finally:
+	 ls -la /tmp/yamon/
+You should see
+	-rw-r--r--    1 root     root          1060 Oct 14 10:12 hourly_2019-10-14.js
+	-rw-r--r--    1 root     root          2944 Oct 14 10:12 lastseen.js
+	-rw-r--r--    1 root     root          1222 Oct 14 10:11 mac-ip.txt
+	-rw-r--r--    1 root     root           912 Oct 14 10:12 raw-traffic-2019-10-14-10.txt
+	-rw-r--r--    1 root     root          7662 Oct 14 10:15 yamon.log
+
+Copy the contents of the temporary log to /opt/YAMon4/logs, but running
+	/opt/YAMon4/copy-log.sh
+	
+Open the log in browser --> e.g., http://192.168.1.1/user/logs/2019-10-14.html
+Look for error messages (in bold red text)
+
+Check that the cron jobs have been created properly:
+In DD-WRT, enter
+	cat /tmp/cron.d/yamon_jobs
+In Turris, enter
+	crontab -l
+	
+You should see
+	0 0 5 * * root /opt/YAMon4/new-billing-interval.sh
+	59 * * * * root /opt/YAMon4/end-of-hour.sh
+	59 23 * * * root /opt/YAMon4/end-of-day.sh
+	0 0 * * * root /opt/YAMon4/new-day.sh
+	0 2 * * * root /opt/YAMon4/in-unlimited.sh start
+	0 8 * * * root /opt/YAMon4/in-unlimited.sh end
+	0 * * * * root /opt/YAMon4/new-hour.sh
+	* * * * * root /opt/YAMon4/update-live-data.sh
+	4-56/4 * * * * root /opt/YAMon4/update-reports.sh
+	
+NB - In Turris, the `root` will not appear in the cron job enties (but must be there for DD-WRT)
+   - the `in-unlimited` entries will only appear if _unlimited_usage='1' in your config.file
+
+Last but not least, add YAMon 4 to your router's startup commands...
+In DD-WRT admin GUI, go to the Administration-->Commands tab (http://192.168.2.1/Diagnostics.asp)
+In Turris, open the LuCI interface and choose Startup under the System menu (https://192.168.1.1/cgi-bin/luci/admin/system/startup)
+and add in the Startup input field.
+	/opt/YAMon4/start.sh 'reboot'
+
+To test that the data collection is working properly, reboot your router and then check that all of the files and folders get recreated properly in /tmp/yamon.
+
+Limitations...
+*** at this point, I have focussed on the getting the scripts to run properly on the router.  I have *NOT* yet started on the reports.
+You will be able to navigate to the reports but they WILL NOT WORK!  I will get to that ASAP.
+
+Please send questions/comments to questions@usage-monitoring.com... please include the log files, screenshots. etc.
+
+Thanks for your assistance
+
+Al

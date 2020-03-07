@@ -1,0 +1,8 @@
++ check-network.sh... parse dmesg for mac & IP
++ general... combine router.js and config.js into one file
+	/opt/YAMon4/fif.sh routerfile '.log|3.4.6' /opt/YAMon34/
+	/opt/YAMon4/fif.sh _configWWW '.log|3.4.6' /opt/YAMon34/
++ new-billing-interval.sh... deactivate any devices which were marked as active but last-seen is > 30d
+* don't clobber the logs in start.sh ... [fixed... in new-day.sh]
+~ add jQuery to logs; add filtering [started... will grow over time likely]
+* Changing ISP billing date in config is not picked up and stays day 5... [fixed]

@@ -1,0 +1,77 @@
+####################################################################################
+# Yet Another Monitor (YAMon)
+# Copyright (c) 2013-present Al Caughey
+# All rights reserved.
+#
+# CONFIG FILE FOR YAMon...
+# Tailor the values below to suit your installation
+# * denotes default or recommended value.
+#
+####################################################################################
+
+
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  ***  NOTE  ***  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\#
+# ***NEW*** - You must re-run start.sh after you've editted entries in this file!  #
+#\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\#
+
+# History
+# 2019-06-18: development starts on initial v4 release... 
+#             see https://usage-monitoring.com/whatsnew.php for a list of the changes in this file
+
+#values determined by setup.sh
+_installed=''                                #date on which YAMon was installed
+_updated=''                                  #date on which YAMon was last updated
+_router=''                                   #router brand name & model (if it can be determined)
+_firmwareName=''                             #full text of router firmware (if it can be determined)
+
+_firmware='0'                                # which firmware is running on the router: permitted values: 0->DD-WRT(*) || 1->OpenWrt || 2->Asuswrt-Merlin || 3->Tomato || 4->LEDE || 5->Xwrt-Vortex || 6->Turris || 7->Padavan
+_lang=''                                     # currently only 'en' is available... (* if null, defaults to `en`)
+_dbkey=''                                    # if not null, this option will sync settings across all of your devices... 
+_updateTraffic=''                            # number of minutes between traffic updates (* if null, defaults to `4`)
+_ispBillingDay=''                            # day of the month for ISP billing roll-over  (* if null, defaults to `1`) - i.e., when traffic totals reset to 0
+_doDailyBU='1'                               # whether or not to make daily backups of user & usage data - values: 1-->Yes(*) || 0->No
+_purgeOldFiles='1'                           # whether or not to delete old backups and logs at the start of a new billing interval - values: 1-->Yes(*) || 0->No
+_loglevel='1'                                # amount of detail to include in the log: permitted values: 0->really verbose || 1->all (*) || 2->less || 3->serious only
+                                             # set _loglevel=999 to turn off logging
+_doLiveUpdates='1'                           # whether or not to record live usage - values: 1-->Yes(*) || 0->No
+_doCurrConnections=1                         # whether or not to include current connections in the live usage file - values: 1-->Yes(*) || 0->No
+_doArchiveLiveUpdates='0'                    # whether or not to retain a copy of all of the live data - values: 1-->Yes || 0->No (* recommended)
+                                             #   NB - only required if _doLiveUpdates == 1 & could get big!
+_monthlyDataCap='100'                        # interval data cap (in GB); set to -1 if unlimited
+_unlimited_usage=''                          # whether or not you have an unlimited downloads time interval: 0->No(*) || 1->Yes
+_unlimited_start=''                          # the time (hours:minutes) when your unlimited downloads period starts
+_unlimited_end=''                            # the time (hours:minutes) when your unlimited downloads period ends
+                                             #   NB - only required if _unlimited_usage == 1
+_dataDir=''                                  # path to the data directory (* if null, defaults to `data/`)
+_logDir=''                                   # path to log files  (* if null, defaults to `logs/`)
+_dailyBUPath=''                              # path to back-ups directory (* if null, defaults to `daily bu/`)
+                                             #   NB - If _dataDir, _logDir or _dailyBUPath starts with a slash it will be an absolute path (and d_baseDir will be ignored)
+_webIndex=''                                 # path to the index page (* if null, defaults to `index.html`)
+_wwwPath=''                                  # path to web directory (* if null, defaults to `/tmp/www/`)
+_wwwURL=''                                   # path to reports (* if null, defaults to `/user`)
+_wwwData=''                                  # path to web data directory(* if null, defaults to `data4` to allow concurrent running with YAMon v3)
+_settings_pswd=''                            # optionally password protect the Settings tab in the HTML reports (* default '' empty string or omitted)
+_includeBridge='0'                           # whether or not there is a bridge in your wireless configuration - values: 0-->No(*) || 1->Yes
+_bridgeMAC=''                                # mac address in form XX:XX:XX:XX:XX:XX for the bridge device, or comma separated list if multiple bridges
+                                             #   NB - only required if _includeBridge == 1
+_defaultGroup='Unknown'                      # default group/owner name for new devices
+_defaultDeviceName='New Device'              # default name for new devices if nothing can be found by the script
+_do_separator='_'                            # a default character that separates the owner and device name in static leases or dnsmasq values, e.g., Al_iPhone (* default ``)
+_doLocalFiles='0'                            # make a local copy of JS, CSS and images: 0->no(*recommended) || 1->yes
+                                             #   NB - set to 1 if you do not want use the files hosted at my domain (usage-monitoring.com)
+                                             #   NB - get the value for this parameter from the settings tab
+_ignoreGateway='1'                           # whether or not to exclude any updates involving your gateway: 0->no(*) || 1->yes
+_gatewayMAC=''                               # MAC address in form XX:XX:XX:XX:XX:XX for the gateway
+_sendAlerts='0'                              # whether or not to send alerts 0->no(*) || 1->yes (via usage-monitoring.com) || 2->via msmtp 
+                                             #   NB - currently only when a new entry is added to users.js or if iptables is corrupted		 
+_logNoMatchingMac=0                          # add an iptables entry to log unknown traffic: 0->no(*) || 1->yes
+_sendAlertTo=''                              #   NB - only required if _sendAlerts == 1
+_path2MSMTP='/opt/usr/bin/msmtp'             #   NB - only required if _sendAlerts == 2
+_MSMTP_CONFIG='/opt/scripts/msmtprc'         #   NB - only required if _sendAlerts == 2
+_enable_ftp='0'                              # set to 1 if you have an FTP site to mirror the data - values: 0-->No(*) || 1->Yes
+                                             #   NB - if _organizeData>0, you will have to create the subdirectories manually
+_ftp_site=''                                 # set to url to your FTP site... ***YOU*** must set up & configure your FTP server
+_ftp_user=''                                 # set to the username for your FTP site
+_ftp_pswd=''                                 # set to the password for your FTP site
+_ftp_dir=''                                  # set to root directory path to your desired storage location
+_local_ip6='fe80:,fd77:'                     # preface for local ip6 addresses (entered as a comma separated list)
