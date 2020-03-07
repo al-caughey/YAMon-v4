@@ -1,0 +1,188 @@
+#daily-usage-table td {
+	min-width: 45px;
+}
+#wrapper, footer {
+//	background: #eee url("../images/back.png") repeat scroll 0 0;
+}
+footer{
+//	#background:#c4c4c4;
+}
+h2{
+//	margin:9px 0;
+}
+#splash {
+	background-size: 100% auto;
+//  height: 120px;
+//  width: 120px;
+}
+.loading h1 {
+//   box-shadow: 0px 0px 15px #818181; 
+//	-webkit-box-shadow: 0px 0px 15px #818181; 
+//	-moz-box-shadow: 0px 0px 15px #818181;
+}
+.settings-tab {
+//	margin: 0 2px -1px 0;
+}
+.edit-d {
+	background-position: 0 7px;
+}
+#SystemTotalsTable > tbody {
+//	max-height: 205px;
+}
+#correction-row,#mcorrection-row,.cf-desc{
+//	background:#FFFFD0;
+}
+#SystemTotalsTable {
+//	_margin: auto;
+}
+#SystemTotalsTable > tbody {
+//	max-height: 205px;
+}
+.current-interval {
+//	background-image: linear-gradient(to left, #d2d2d2 0%, #b4b4b4 100%)!important;
+}
+.imp-text{
+//	_background:#FFEBCD;
+}
+.add-h {
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll center -128px;
+}
+.dlog-close, #alert-clear {
+//	background: rgba(0, 0, 0, 0) url("../images/buttons.png") no-repeat scroll center -200px;
+//	height: 20px;
+//	width: 20px;
+}
+#alert-clear{
+//	background-position:center -320px;
+}
+.legend-colour {
+//	background-position: center -51px;
+}
+
+#h_sd.checked,.p-cb-st.checked {
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll center -66px;
+}
+#h_sd.partial,.p-cb-st.partial{
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll center -146px;
+}
+
+#h_sd-dd{
+//	background: #fff url("../images/icons.png") no-repeat scroll -2px -34px;
+}
+
+.fd-sel {
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll 4px -66px;
+}
+
+._detanod {
+//	display:none;
+}
+.gradient{
+//	background-image: -webkit-gradient(linear,left bottom,right bottom,color-stop(0.12,#008000),color-stop(0.50,#FF8C00),color-stop(0.88,#D40000));
+//	background-image: -o-linear-gradient(right,#008000 12%,#FF8C00 50%,#D40000 88%);
+//	background-image: -moz-linear-gradient(right,#008000 12%,#FF8C00 50%,#D40000 88%);
+//	background-image: -webkit-linear-gradient(right,#008000 12%,#FF8C00 50%,#D40000 88%);
+//	background-image: -ms-linear-gradient(right,#008000 12%,#FF8C00 50%,#D40000 88%);
+//	background-image: linear-gradient(to right,#008000 12%,#FF8C00 50%,#D40000 88%);
+}
+
+#sp_minSL, #sp_maxSL {
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll center -100px;
+}
+#sp_curSL {
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll center -110px;
+}
+.filter .td-time {
+//	background: rgba(0, 0, 0, 0) url("../images/icons.png") no-repeat scroll 4px -64px;
+}
+.flagged {
+//	background: rgba(0, 0, 0, 0) url("../images/edit.png") no-repeat scroll 6px center;
+}
+button {
+//	Border-top: 2px solid #D4D4D4;
+//	Border-left: 2px solid #D4D4D4;
+//	Border-right: 2px solid #5A5A5A;
+//	Border-bottom: 2px solid #5A5A5A;
+}
+.sp-current-date{
+//	background-image: -o-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%);
+//	background-image: -moz-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%);
+//	background-image: -webkit-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%);
+//	background-image: -ms-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%);
+//	background-image: linear-gradient(to left,#d2d2d2 0%,#b4b4b4 100%);
+}
+.report-date {
+//	background-image: -o-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%)!important;
+//	background-image: -moz-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%)!important;
+//	background-image: -webkit-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%)!important;
+//	background-image: -ms-linear-gradient(left,#d2d2d2 0%,#b4b4b4 100%)!important;
+//	background-image: linear-gradient(to left,#d2d2d2 0%,#b4b4b4 100%)!important;
+}
+
+.rs-date{
+//	background: #b4b4b4;
+}
+.re-date{
+//	background: #d2d2d2;
+}
+
+.filterIP {
+//	background: rgba(0, 0, 0, 0) url("../images/buttons.png") no-repeat scroll right -200px;
+}
+.pDBtn,.nDBtn,.fDBtn,.pmBtn,.lDBtn,.nmBtn {
+//	Border-top: 2px solid #D4D4D4;
+//	Border-left: 2px solid #D4D4D4;
+//	Border-right: 2px solid #5A5A5A;
+//	Border-bottom: 2px solid #5A5A5A;
+}
+
+.pDBtn {
+//	background: rgba(0,0,0,0) url("../images/buttons.png") no-repeat scroll center -43px;
+}
+.fDBtn {
+//	background: rgba(0,0,0,0) url("../images/buttons.png") no-repeat scroll center -83px;
+}
+.pmBtn {
+//	background: rgba(0,0,0,0) url("../images/buttons.png") no-repeat scroll center -123px;
+}
+.nDBtn {
+//	background: rgba(0,0,0,0) url("../images/buttons.png") no-repeat scroll center -63px;
+}
+.lDBtn {
+//	background: rgba(0,0,0,0) url("../images/buttons.png") no-repeat scroll center -103px;
+}
+.nmBtn {
+//	background: rgba(0,0,0,0) url("../images/buttons.png") no-repeat scroll center -143px;
+}
+.close {
+//	background: rgba(0, 0, 0, 0) url("../images/buttons.png") no-repeat scroll center -200px ;
+}
+.sc{
+//	background-position: center -22px !important;
+}
+#StartPause{
+//	background-position: center -281px;
+}
+#Reset{
+//	background-position: center -301px;
+}
+#Refresh{
+//	background-position: center -221px;
+}
+.rest-new {
+//	background: rgba(0, 0, 0, 0) url("../images/new-row.png") no-repeat scroll center 0;
+}
+.h2-tab {
+//	text-shadow: 1px 1px 5px rgba(150, 150, 150, 1);
+//	background: rgba(0, 0, 0, 0) url("../images/buttons.png") no-repeat scroll left -241px;
+}
+
+.h2-tab:active,.h2-tab.pref {
+//	background-position: left -261px;
+}
+#rld-mbd-g {
+//	background: rgba(0, 0, 0, 0) url("../images/buttons.png") no-repeat scroll center -222px;
+}
+#ip-sync {
+//	background: rgba(0, 0, 0, 0) url("../images/buttons.png") no-repeat scroll left -222px;
+}

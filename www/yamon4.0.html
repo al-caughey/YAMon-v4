@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="cache-control" content="no-cache" />
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<!--meta name="viewport" content="width=device-width"-->
+		<!--meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0"-->
+		<title>YAMon:: Usage monitoring by group and device...</title>
+		<meta name="description" content="Internet Usage Statistics" />
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+		<script type="text/javascript" src="js/config4.0.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script defer type="text/javascript">
+			var _html_version='4.0'
+			var _file_version='4.0'
+			var args=window.location.search.replace('?','').split('&'),ver=args[1]||_file_version,domain='',path=''
+			if(typeof(_doLocalFiles)=='undefined'||_doLocalFiles=='0'){
+				path = (localStorage.getItem('devOrCurr') || 'current') + '/'
+				domain='https://usage-monitoring.com/'
+			}
+			$("<link/>", {rel: "stylesheet", type: "text/css", href: domain + path + 'css/normalize.css'}).appendTo("head");
+			$("<link/>", {rel: "stylesheet", type: "text/css", href: domain + path + 'css/yamon' + ver + '.css'}).appendTo("head");
+			$("<link/>", {rel: "shortcut icon",href: domain + path + 'images/favicon.png'}).appendTo("head");
+			$.ajax({url: domain + path + 'js/jquery.md5.min.js', dataType: "script"});
+		</script>
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script type="text/javascript">
+			google.charts.load('current', {packages: ['corechart']});
+		</script>
+		<script defer type="text/javascript">
+			if(!localStorage.getItem('ajaxCache')) localStorage.setItem('ajaxCache', 'true')
+			$.ajaxSetup({'cache':localStorage.getItem('ajaxCache')=='true'});  //Comment out this line if your router requires timestamps appended to data URLs
+			google.charts.load('current', {'packages':['corechart', 'gauge']});
+			$(document).ready(function(){
+				$.ajax({crossDomain: true, url: domain + path + 'js/util' + ver+ '.js',dataType: "script", cache:false})
+					.done(function(){
+						$.ajax({crossDomain: true, url: domain + path + 'js/yamon' + ver+ '.js',dataType: "script", cache:false});
+					});
+			})
+		</script>
+
+		<link rel="stylesheet" type="text/css" href="css/custom.css"/>
+	</head>
+	<body>
+	<noscript class='alert'>This web application makes extensive use of JavaScript.  You must either enable JavaScript in your current browswer or upgrade to a JavaScript capable browser.</noscript>
+		<div class='loading-wrapper a-c p-a'>
+			<div class='loading p-a'>
+				<span id='splash' class='p-r'><span class="verno"></span></span>
+				<h1>Loading...</h1>
+			</div>
+		</div>
+		<div id="wrapper" class='p-r'>
+			<div id="PageHeader" class='p-r'>
+				<h1>Yet Another Monitor
+					<span class="v-info">HTML:
+						<span class='html_version'></span> /  Script:
+						<span class='scriptVersion'></span>
+					</span>
+				</h1>
+				<p id='p-timer' class='p-a'>Refreshing in:&nbsp;<span class="RefreshInterval">120</span> sec.
+					<span class='btn' title='Pause the refresh timer' id="StartPause"></span>
+					<span class='btn' title='Reset the refresh timer' id="Reset"></span>
+					<span class='btn' title='Refresh now!' id="Refresh"></span>
+				</p>
+			</div>
+
+			<section id='tabs-w' class='p-r hidden'>
+				<article id='intro-tab' class='settings-tab btn hidden'></article>
+				<article id='summary-tab' class='settings-tab btn' title='Open the Summary tab [default view] '></article>
+				<article id='daily-tab' class='settings-tab btn a-c' title='Open the Daily Usage tab'><span class='p-r' id='daily-tab-date'>Day</span></article>
+				<article id='monthly-tab' class='settings-tab btn a-c' title='Open the Monthly Usage tab'><span class='p-r' id='monthly-tab-date'>Mon</span></article>
+				<article id='monthly-breakdown-tab' class='settings-tab btn' title='Open the Monthly Breakdown tab'></article>
+				<article id='live-tab' class='settings-tab btn' title='Open the Live Usage tab'></article>
+				<article id='devices-tab' class='settings-tab btn' title='Open the Devices tab'></article>
+				<article id='acses-tab' class='settings-tab btn' title='Open the Access Restrictions tab'></article>
+				<article id='settings-tab' class='settings-tab btn' title='Open the Settings tab'></article>
+				<article id='alert-tab' class='settings-tab alert-icon btn hidden' title="Uh-oh... something's gone wrong!"></article>
+				<a id='latest-log' class='btn' href='logs/latest-log.html' target='_blank'></a>
+				<article id='help-tab' class='settings-tab btn p-a' title='Get Help!'></article>
+			</section>
+			<section id='main-body' class='p-r'>
+				<div class='_detanod' amount=20 title='Thank you in advance for your support!'>
+					<div class='submenu'>
+						<span class='amount btn' amount=10 title='Donate $10'>$10</span>
+						<span class='amount btn' amount=15 title='Donate $15'>$15</span>
+						<span class='amount btn' amount=20 title='Donate $20... thanks!'>$20</span>
+						<span class='amount btn' amount=25 title='Donate $25 - wow!!!'>$25</span>
+						<span class='amount btn' amount='' title='Select this option to choose your own amount'>Other...</span>
+					</div>
+				</div>
+				<div id='error-notification' class='p-r'>
+					<h1>This text will go away once all of the data has loaded.</h1>
+					<h2>Ah nuts!  An unexpected JavaScript error has prevented the reports from opening properly.<br/>
+					Please go to the <a href='https://usage-monitoring.com/help/?t=error-notification' target='_blank'>Help</a> page to find out how you can help resolve this issue.</h2>
+				</div>
+				<div id="summary-tab-section" class="tab-div hidden p-r">
+
+					<h2>Summary Report</h2>
+					<div class='sp-sldr p-r'>
+						<p class="p-report-interval">
+							<span class='rs-date a-r pre-btn'></span><span class='sp-current-date'><span class='current-date'></span></span><span class='re-date a-l post-btn'></span>
+						</p>
+						<p class="p-report-date" >
+							<span class='pre-btn a-r'>
+								<button class='pmBtn' title='Go to the first day of the previous interval' type='button'></button>
+								<button class="fDBtn" title="Go to the first day of this interval" type="button"></button>
+								<button class="pDBtn" title="Go to the previous day in this interval" type="button"></button>
+							</span>
+							<span class="report-date"></span>
+							<span class='post-btn a-l'>
+								<button class="nDBtn" title="Go to the next day in this interval" type="button"></button>
+								<button class="lDBtn" title="Go to the last day of this interval" type="button"></button>
+								<button class='nmBtn' title='Go to the first day of the next interval' type='button'></button>
+							</span>
+						</p>
+					</div>
+					<section class='main-section'>
+						<table id='SummaryUsageTable' class='lc'>
+							<tr>
+								<td class='bl td-rot' rowspan=7><span class='rot-90'>Router Stats</span></td>
+							</tr>
+							<tr class='bg-lt'>
+								<td class='a-r fw-b bt bl br' title='Router Brand'>Router:</td>
+								<td class='a-c bt br router-brand' title='Router Brand'>TBD</td>
+								<td class='a-c bt br router-installed' title='YAMon was first installed'>TBD</td>
+							</tr>
+							<tr>
+								<td class='a-r fw-b bl br' title='Router Firmware'>Firmware:</td>
+								<td class='a-c br router-firmware' title='Router Firmware'>TBD</td>
+								<td class='a-c br router-updated' title='YAMon was last updated'>TBD</td>
+							</tr>
+							<tr class='bg-lt'>
+								<td class='a-r fw-b br bl bt' id='sp-uptime'>Uptime:</td>
+								<td id='uptime' class='a-c br bt n-a' colspan=2></td>
+							</tr>
+							<tr id='serverload' >
+								<td class='a-r fw-b br bl'>Load:</td>
+								<td class='br' colspan=2>
+									<span class='gradient p-r'>
+										<span id='sp_1minSL' title='Current Ave 1-min Load' class='p-a'></span>
+										<span id='sp_5minSL' title='Ave 5-min Load' class='p-a'></span>
+										<span id='sp_15minSL' title='Ave 15-min Load' class='p-a'></span>
+									</span>
+								</td>
+							</tr>
+							<tr class='bg-lt'>
+								<td class='a-r fw-b br bl'>Free Memory:</td>
+								<td class='a-c br' colspan=2><span id='sp-freeMem'>0</span></td>
+							</tr>
+							<tr>
+								<td class='a-r fw-b br bl'>Memory &amp;<br/>Disk Utilization:</td>
+								<td id='gauges' class='a-c br' colspan=2></td>
+							</tr>
+							<tr>
+								<td class='bl td-rot' rowspan=5><span class='rot-90'>Traffic</span></td>
+							</tr>
+							<tr>
+								<th class='a-c br bl bt' title='Current Report Date'>Intervals</th>
+								<th class='a-c br bt current-date' title='Current Report Date'>Current Date</th>
+								<th class='a-c br bt current-interval' title='Current Report Interval'>Billing Interval</th>
+							</tr>
+							<tr>
+								<td class='a-r fw-b br bl'>Downloads:</td>
+								<td id='st-d-db' class='btn num a-c br downloads'></td>
+								<td id='st-i-db' class='btn num a-c br downloads'></td>
+							</tr>
+							<tr class='bg-lt'>
+								<td class='a-r fw-b br bl'>Uploads:</td>
+								<td id='st-d-ub' class='btn num a-c br uploads'></td>
+								<td id='st-i-ub' class='btn num a-c br uploads'></td>
+							</tr>
+							<tr>
+								<td class='a-r fw-b th-tot br bl'>Total:</td>
+								<td id='st-d-tb' class='btn num a-c br tByts'></td>
+								<td id='st-i-tb' class='btn num a-c br tByts'></td>
+							</tr>
+							<tbody id='sum-d-g'>
+								<tr>
+									<td class='bl td-rot' rowspan=5><span class='rot-90'>Devices &amp; Groups</span></td>
+								</tr>
+								<tr class='bg-lt'>
+									<td class='a-r a-t fw-b br bl'># Devices Online:</td>
+									<td id='ds-olt' class='btn a-c br n-a'></td>
+									<td id='ds-oli' class='btn a-c br n-a'></td>
+								</tr>
+								<tr>
+									<td class='a-r a-t fw-b br bl'>Busiest <span class='numBusyDevices'></span> Devices:<br/>
+										<div id='numBusyDevices' title='Pick the number of devices to show'></div>
+									</td>
+									<td id='ds-bdt' class='a-c a-t br n-a'></td>
+									<td id='ds-bdi' class='a-c a-t br n-a'></td>
+								</tr>
+
+								<tr class='bg-lt'>
+									<td class='a-r a-t fw-b br bl'>Busiest <span class='numBusyGroups'></span> Groups:<br/>
+										<div id='numBusyGroups' title='Pick the number of groups to show'></div>
+									</td>
+									<td id='ds-bgt' class='a-c a-t br n-a'></td>
+									<td id='ds-bgi' class='a-c a-t br n-a'></td>
+								</tr>
+
+								<tr>
+									<td class='a-r a-t fw-b br bl'>New Devices:</td>
+									<td id='ds-att' class='a-c a-t br n-a'></td>
+									<td id='ds-ati' class='a-c a-t br n-a'></td>
+								</tr>
+							</tbody>
+						</table>
+
+						<article class='rc'>
+							<table class='info-top p-r' id="SystemTotalsTable">
+								<thead>
+									<tr class='info-p p-r'>
+										<th class='st-i br bt bl' rowspan=2>
+											Interval
+											<span class='info-w p-a'>
+												<span class='info btn'></span>
+												<span class='ts btn'></span>
+											</span>
+										</th>
+										<th colspan=2 class='st-un br bt'>
+											<span class='table-units'>Auto</span>
+											<span class='table-units'>GB</span>
+											<span class='table-units'>MB</span>
+											<span class='table-units'>KB</span>
+										</th>
+										<th class='st-t tot-dlo th-tot br bt' rowspan=2>Total</th>
+										<th class='st-c is-cap br2 bt' rowspan=2>% of <span class='spUsageCap imp-text'>Not Set... see 'Settings' tab</span> Cap</th>
+										<th class='st-pt a-c br bt' rowspan=2>
+											Projected<br/>Total
+										</th>
+									</tr>
+									<tr>
+										<th class='st-d'>Downloads</th><th class='br st-u'>Uploads</th>
+									</tr>
+									<tr class='info-tr hidden'>
+										<td class='info-td p-a' colspan=100%>
+											<div class='info-s p-r hidden' >
+												<span class='close btn p-a'></span>
+												<p class='info-d'>&starf; indicates the currently loaded reporting interval</p>
+												<p class='info-d'>Click any date in the `Interval` column to load the data for that month </p>
+												<p class='info-d'>If the totals for an interval are not correct, click the interval date to reload &amp; re-calculate that month's totals. Otherwise, check your data files </p>
+												<p class='info-d'>To delete a row from the table, click <span class='dhe'></span> in the `Projected Total` column</p>
+												<p class='info-d'>To add a row to the bottom of the table, click <span class='ts btn'></span></p>
+												<p class='ts-d'><span class="add-h btn" title="Add another interval"></span>Add a totals for an earlier interval</p>
+											</div>
+										</td>
+									</tr>
+									<tr id="blank-summary-row" class='hidden'>
+										<td class="st-i br bl"><span class="interval a-c"></span></td>
+										<td class="downloads st-d num"></td>
+										<td class="uploads st-u num br"></td>
+										<td class="tByts st-t num br"></td>
+										<td class="percent st-c is-cap br2"></td>
+										<td class="a-c st-pt del-row btn num"></td>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+							<div id="UsageGraph" class="graphdiv"></div>
+						</article>
+					</section>
+				</div>
+				<div id="daily-tab-section" class="tab-div p-r hidden">
+					<h2>Daily Usage Report</h2>
+					<div class='sp-sldr p-r'>
+						<p class="p-report-interval">
+							<span class='rs-date a-r pre-btn'></span><span class='sp-current-date'><span class='current-date'></span></span><span class='re-date a-l post-btn a-l'></span>
+						</p>
+						 <p class="p-report-date">
+							<span class='pre-btn a-r'>
+								<button class='pmBtn' title='Go to the first day of the previous interval' type='button'></button>
+								<button class="fDBtn" title="Go to the first day of this interval" type="button"></button>
+								<button class="pDBtn" title="Go to the previous day in this interval" type="button"></button>
+							</span>
+							<span class="report-date"></span>
+							<span class='post-btn a-l'>
+								<button class="nDBtn" title="Go to the next day in this interval" type="button"></button>
+								<button class="lDBtn" title="Go to the last day of this interval" type="button"></button>
+								<button class='nmBtn' title='Go to the first day of the next interval' type='button'></button>
+							</span>
+						</p>
+					</div>
+					<section class='main-section'>
+						<article class='lc'>
+							<table class='info-top p-r data-table' id='Daily-usage-table'>
+								<thead id="DailyUsageHeader">
+									<tr class='info-p p-r'>
+										<th class='br bl bt' rowspan=2>
+											<p class='u-d btn'>
+												<span class='d-ng'></span> Groups / <span class='d-nd'></span> Devices
+											</p>
+											<span id='c-h_sd' class='p-r'>
+												<span id='h_sd' class='checked c-p' title='Click to hide/show devices in the hourly chart below'></span>
+												<span id='h_sd-dd' class='btn c-p'></span>
+												<span id='h_sd-ddl' class='p-a hidden'></span>
+											</span>
+											<span class='icon btn p-a' title='View the contents of the hourly data file'></span>
+											<!--span class='log btn p-a' title='View the contents of the log file'></span-->
+										</th>
+										<th class='br no-bb bt' colspan=2>
+											<span class='table-units'>Auto</span>
+											<span class='table-units'>GB</span>
+											<span class='table-units'>MB</span>
+											<span class='table-units'>KB</span>
+											<br/>
+											All Day</th>
+										<th class='isUL ul-int br no-bb' colspan=2>Unlimited Interval</th>
+										<th class='th-tot br2 bt' rowspan=2>Total</th>
+										<th class='br bt' rowspan=2>
+											<span class='info-w p-a'>
+												<span class='info btn'></span>
+												<span class='ts btn'></span>
+											</span>
+											Percent
+										</th>
+									</tr>
+									<tr>
+										<th>Downloads</th><th class='br'>Uploads</th><th class='isUL'>Downloads</th><th class='isUL br'>Uploads</th>
+									</tr>
+									<tr id='no-daily-data' class='hidden'>
+										<td colspan=5>There is no data for the selected date!</td>
+									</tr>
+									<tr class='info-tr hidden'>
+										<td class='info-td p-a' colspan=100%>
+											<div class='info-s p-r hidden' >
+											<span class='close btn p-a'></span>
+											<p class='info-d'>The hourly usage file was updated:<span id='sp_hourly_updated' class='imp-text'></span><p class='info-d'></p>
+											<p class='info-d'>Click a `group` or `device` name to see the data usage by date on the `Monthly Breakdown` tab</p>
+											<p class='info-d'>Click <span class="item-e"></span> to the left of a `group` name to expand or collapse the devices in that group.  This will adjust the display of the 	 beside and below this table</p>
+											<p class='info-d'>Click <span class="legend-colour" style="background-color:MediumAquaMarine"></span> to the left of a `device` name to include or exclude that device in the 	</p>
+											<p class='info-d'>Double-click anywhere in the row to show just that device in the hourly usage chart</p>
+											<p class='info-d'>Go to the `Devices` tab to alter the name of a device or its group association</p>
+											<p class='info-d'>If you are missing data in the report, click <span class='ts btn'></span> to add a correction</p>
+											<p class='info-d is-isp'>Also, click <span class='ts btn'></span> to add usage date from your ISP</p>
+											<p class='ts-d'>Add a `correction` if you've accidentally stopped YAMon or if things went haywire and you are missing data in the reports.</p>
+											<p class='ts-d'>
+												<input type="text" id="cf-desc" placeholder='Reason for correction' title='Enter a brief reason for the correction'>
+												<input class='a-r cf-d' type="text" id='cf-d' name="cf-d" placeholder='Down' title='Enter missing downloads in MB'>
+												<input class='a-r cf-u' type="text" id='cf-u' name="cf-u" placeholder='Up' title='Enter missing uploads in MB'> MB
+												<button id='remove-correction' class='btn' onclick='removecorrection()' title='Click to delete this correction'>Remove correction</button>.
+											</p>
+											<p class='ts-d is-isp'>Enter your ISP usage data:
+												<input class='i-isp a-r' type="text" id="d-isp-d" placeholder='Down' title='Enter ISP downloads in MB'>
+												<input class='i-isp a-r' type="text" id="d-isp-u" placeholder='Up' title='Enter ISP downloads in MB'> MB
+											</p>
+											</div>
+										</td>
+									</tr>
+									<tr id="blank-group-row" class="hidden">
+										<td class="td-un br bl">
+											<span class="item-e"></span>
+											<span class="userName"></span>
+										</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL ul-down num"></td>
+										<td class="isUL ul-up num br"></td>
+										<td class="tByts br2 num"></td>
+										<td class="percent br"></td>
+									</tr>
+									<tr id="blank-device-row" class="hidden">
+										<td class="deviceName br bl">
+											<span class="legend-colour" title='Click to add/remove this device from the graphs'></span>
+											<span class="thedevice"></span>
+										</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL ul-down num"></td>
+										<td class="isUL ul-up num br"></td>
+										<td class="tByts br2 num"></td>
+										<td class="percent br"></td>
+									</tr>
+									<tr class="DailyFooter ftotals hidden">
+										<td class="a-r br bl">
+											<button type="button" class="pDBtn" title='Go to the previous day in this interval'></button>
+											:::Totals:::
+											<button type="button" class="nDBtn" title='Go to the next day in this interval'></button>
+										</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL ul-down num"></td>
+										<td class="isUL ul-up num br"></td>
+										<td class="tByts br2 num"></td>
+										<td class="a-c percent br"></td>
+									</tr>
+								</thead>
+								<tbody id="DailyData"> </tbody>
+								<tfoot>
+									<tr id="correction-row" class='hidden'>
+										<td class="cf-desc a-r br bl">
+										</td>
+										<td class="cf-d a-r MBytes num">
+										</td>
+										<td class="cf-u a-r br MBytes num">
+										</td>
+										<td class="isUL"></td>
+										<td class="isUL br"></td>
+										<td class="tByts num a-r br2 bytes" value="0">0</td>
+										<td class="br a-c percent">-</td>
+									</tr>
+									<tr class="DailyFooter ftotals">
+										<td class="a-r br bl">
+											<button type="button" class="pDBtn" title='Go to the previous day in this interval'></button>
+											:::Totals:::
+											<button type="button" class="nDBtn" title='Go to the next day in this interval'></button>
+										</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL ul-down num"></td>
+										<td class="isUL ul-up num br"></td>
+										<td class="tByts br2 num"></td>
+										<td class="a-c percent br"></td>
+									</tr>
+									<tr id="LocalFooter">
+										<td class="a-r br bl">Local Traffic:</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL a-c">-</td>
+										<td class="isUL a-c br">-</td>
+										<td class="tByts br2 num"></td>
+										<td class="a-c percent br">-</td>
+									</tr>
+									<tr id="RouterFooter">
+										<td class="a-r br bl">Measured @ Router:</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL a-c">-</td>
+										<td class="isUL a-c br">-</td>
+										<td class="tByts br2 num"></td>
+										<td class="a-c percent br">-</td>
+									</tr>
+									<tr id="DiffFooter">
+										<td class="a-r br bl">Difference:</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL a-c">-</td>
+										<td class="isUL a-c br">-</td>
+										<td class="tByts br2 num"></td>
+										<td class="a-c percent br">-</td>
+									</tr>
+									<tr id="PercentFooter">
+										<td class="a-r br bl">Percent:</td>
+										<td class="downloads percent"></td>
+										<td class="uploads percent br"></td>
+										<td class="isUL a-c">-</td>
+										<td class="isUL a-c br">-</td>
+										<td class="tByts percent br2"></td>
+										<td class="a-c br">-</td>
+									</tr>
+									<tr id="daily-isp-row" class='is-isp'>
+										<td class="a-r br bl">
+											<span class="isp-name">ISP</span> Totals:
+										</td>
+										<td class="a-r MBytes num d-isp-d"></td>
+										<td class="a-r br MBytes num d-isp-u"></td>
+										<td class="isUL"></td>
+										<td class="isUL br"></td>
+										<td class="tByts num a-r br2 bytes" value="0">0</td>
+										<td class="br a-c percent">-</td>
+									</tr>
+									<tr id="daily-isp-diff" class='is-isp'>
+										<td class="a-r br bl">Difference:</td>
+										<td class="downloads num"></td>
+										<td class="uploads num br"></td>
+										<td class="isUL a-c">-</td>
+										<td class="isUL a-c br">-</td>
+										<td class="tByts br2 num"></td>
+										<td class="a-c percent br">-</td>
+									</tr>
+									<tr id="daily-isp-percent" class='is-isp'>
+										<td class="a-r br bl">Percent:</td>
+										<td class="downloads percent"></td>
+										<td class="uploads percent br"></td>
+										<td class="isUL a-c">-</td>
+										<td class="isUL a-c br">-</td>
+										<td class="tByts br2"></td>
+										<td class="a-c percent br">-</td>
+									</tr>
+							   </tfoot>
+							</table>
+						</article>
+						<article class='rc'>
+							<div id="DailyGraph" class="graphdiv"></div>
+						</article>
+
+					</section>
+					<div id="hourly-table-div" class="">
+                        <h2 class='tab-name'><button type="button" class="pDBtn" title="Go to the previous day in this interval"></button>&nbsp;Hourly Traffic for <span class='current-date'></span> <button type="button" class="nDBtn" title="Go to the next day in this interval"></button></h2>
+                        <table id='hourly-table' class='data-table'>
+                            <thead>
+                                <tr class='header-row'>
+                                    <th rowspan=2>Group</th>
+                                    <th rowspan=2 class='br'>Name</th>
+                                    <th class='header AM btn' colspan=12>AM</th>
+                                    <th class='header PM btn' colspan=12>PM</th>
+                                </tr>
+                                <tr class='header-row'>
+                                    <th class='AM'>12</th>
+                                    <th class='AM'>1</th>
+                                    <th class='AM'>2</th>
+                                    <th class='AM'>3</th>
+                                    <th class='AM'>4</th>
+                                    <th class='AM'>5</th>
+                                    <th class='AM'>6</th>
+                                    <th class='AM'>7</th>
+                                    <th class='AM'>8</th>
+                                    <th class='AM'>9</th>
+                                    <th class='AM'>10</th>
+                                    <th class='AM'>11</th>
+                                    <th class='PM'>12</th>
+                                    <th class='PM'>1</th>
+                                    <th class='PM'>2</th>
+                                    <th class='PM'>3</th>
+                                    <th class='PM'>4</th>
+                                    <th class='PM'>5</th>
+                                    <th class='PM'>6</th>
+                                    <th class='PM'>7</th>
+                                    <th class='PM'>8</th>
+                                    <th class='PM'>9</th>
+                                    <th class='PM'>10</th>
+                                    <th class='PM'>11</th>
+                                </tr>
+                                <tr class='hourly-row hidden'>
+                                    <td class='group-name'>-</td>
+                                    <td class='reports-name'>-</td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr AM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                    <td class='hr PM'><span class='down num'>-</span><span class='up num'>-</span></td>
+                                </tr>
+                            </thead>
+                            <tbody id='hourly-tbody'></tbody>
+                            <tfoot id='hourly-tfoot'>
+                                <tr class='no-data hidden' id='hourly-no-data'>
+                                    <td colspan=100%>No data for this date</td>
+                                </tr>
+                                <tr class='coming-soon' id='hourly-coming-soon'>
+                                    <td colspan=100%>Coming soon... a table showing usage per device per hour (like the graph below but a table)</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+					<div id="hourlyGraph" class="graphdiv">Hourly Data Graph</div>
+					<div id="hourlyDiffGraph" class="graphdiv">Hourly Differences Graph</div>
+					<div id="hourlyLoadGraph" class="graphdiv">Hourly Server Loads Graph... coming soon</div>
+					<div id="InterfacesGraph" class="graphdiv">Hourly Traffic by Interface Graph... coming soon</div>
+				</div>
+				<div id="monthly-tab-section" class="tab-div p-r hidden">
+					<h2>Monthly Usage Report</h2>
+					<section class='main-section'>
+						<article class='lc'>
+							<p><span class='mr-int'>Reporting Interval: <span class='current-interval imp-text'></span></span></p>
+							<table class='info-top p-r' id='Monthly-usage-table'>
+							<thead id="MonthlyHeader">
+								<tr class='info-p p-r'>
+									<th class='br bl bt' rowspan=2>
+										<span class='u-d btn'>
+											<span class='m-ng'></span> Groups / <span class='m-nd'></span> Devices
+										</span>
+										<span class='icon btn p-a' title='View the contents of monthly data file'></span>
+									</th>
+									<th class='br no-bb bt' colspan=2>
+										<span class='table-units'>Auto</span>
+										<span class='table-units'>GB</span>
+										<span class='table-units'>MB</span>
+										<span class='table-units'>KB</span>
+										<br/>
+										All Day</th>
+									<th class='isUL ul-int br no-bb bt' colspan=2>Unlimited Interval</th>
+									<th class='th-tot br2 bt' rowspan=2>Total</th>
+									<th class='br bt' rowspan=2>
+										<span class='info-w p-a'>
+											<span class='info btn'></span>
+										</span>
+										Percent
+									</th>
+								</tr>
+								<tr>
+									<th>Downloads</th><th class='br'>Uploads</th><th class='isUL'>Downloads</th><th class='isUL br'>Uploads</th>
+								</tr>
+								<tr class='info-tr hidden'>
+									<td class='info-td p-a' colspan=100%>
+										<div class='info-s p-r hidden' >
+											<span class='close btn p-a'></span>
+											<p class='info-d'>Click a `group` or `device` name to see the data usage by date on the `Monthly Breakdown` tab</p>
+											<p class='info-d'>Click <span class="item-e"></span> to the left of a `group` name to expand or collapse the devices in that group.  This will adjust the display of the pie 	 beside this table</p>
+											<p class='ts-d'></p>
+										</div>
+									</td>
+								</tr>
+								<tr class="MonthlyFooter hidden ftotals">
+									<td class="a-r br bl">:::Totals:::</td>
+									<td class="downloads num"></td>
+									<td class="uploads num br"></td>
+									<td class="isUL ul-down num"></td>
+									<td class="isUL ul-up num br"></td>
+									<td class="tByts br2 num"></td>
+									<td class="a-c percent br"></td>
+								</tr>
+							</thead>
+							<tbody id="MonthlyData"></tbody>
+							<tfoot>
+								<tr id="mcorrection-row" class='hidden is_d'>
+									<td class="a-r br bl">Corrections</td>
+									<td class="cfv downloads num a-r"></td>
+									<td class="cfv uploads num a-r br"></td>
+									<td class="isUL"></td>
+									<td class="isUL br"></td>
+									<td class="tByts br2 num a-r"></td>
+									<td class="br a-c percent">-</td>
+								</tr>
+								<tr class="MonthlyFooter ftotals">
+									<td class="a-r br bl">:::Totals:::</td>
+									<td class="downloads num"></td>
+									<td class="uploads num br"></td>
+									<td class="isUL ul-down num"></td>
+									<td class="isUL ul-up num br"></td>
+									<td class="tByts br2 num"></td>
+									<td class="a-c percent br"></td>
+								</tr>
+								<tr id="monthly-isp-row" class='is-isp'>
+									<td class="a-r br bl"><span class="isp-name">ISP</span> Totals: </td>
+									<td class="a-r num" id="m-isp-d"></td>
+									<td class="a-r br num" id="m-isp-u"></td>
+									<td class="isUL"></td>
+									<td class="isUL br"></td>
+									<td class="tByts num a-r br2 bytes" value="0">0</td>
+									<td class="br a-c percent">-</td>
+								</tr>
+							</tfoot>
+						</table>
+						</article>
+						<article class='rc'>
+							<div id="MonthlyGraph" class='graphdiv'></div>
+							<div id="UnlimitedGraph" class="graphdiv isUL"></div>
+						</article>
+					</section>
+					<div id="MonthlyGraphbyDevice" class='graphdiv'></div>
+					<div id="MonthlyGraphbyOwner" class='graphdiv'></div>
+				</div>
+
+				<div id="monthly-breakdown-tab-section" class="tab-div p-r hidden">
+					<h2>Monthly Usage Breakdown</h2>
+					<section class='main-section'>
+						<p><span class='mr-int'>Reporting Interval: <span class='current-interval imp-text'></span></span></p>
+						<table class='info-top p-r' id='Monthly-breakdown-table'>
+							<thead id="MonthlyBreakdownHeader">
+								<tr class='info-p p-r'>
+									<th id='mb-router-th' colspan=5 class='br2 bt bl'>YAMon Totals - Filter data:
+										<select name="MonthlyBreak" id="mb-filter">
+											<option value="ALL" selected>ALL Traffic By Day</option>
+										</select>
+										<span class='info-w p-a'>
+											<a class='export btn' title='Export to CSV'></a>
+											<span class='info btn'></span>
+										</span>
+									</th>
+									<th colspan=4 class='is-isp br2 bt'><span class='isp-name'></span> Totals <a class='isp-url' target='_blank'>Link</a>&nbsp;&nbsp;<button onclick="settings('isp')">Import</button></th>
+									<th colspan=4 class='is-rd br bt'>
+										Measured @ Router
+									</th>
+								</tr>
+								<tr>
+									<th rowspan=2 class='br bl'>
+										Date
+									</th>
+									<th colspan=2 class='br bb1'>
+										<span class='table-units'>Auto</span>
+										<span class='table-units'>GB</span>
+										<span class='table-units'>MB</span>
+										<span class='table-units'>KB</span>
+										<br/>
+										All Day</th>
+									<th colspan=2 class='isUL ul-int br bb1'>Unlimited</th>
+									<th class='th-tot br2' rowspan=2>Total</th>
+									<th class='br2' rowspan=2>Agg.</th>
+									<th colspan=4 class='is-isp br2 bb1'>
+										<span id='isp_details' class='ddp btn ddp-t sel'>Totals</span> /
+										<span id='isp_diff' class='ddp btn ddp-d'>Differences</span> /
+										<span id='isp_percent' class='ddp btn ddp-p'>Percent</span>
+									</th>
+									<th colspan=4 class='is-rd br bb1'>
+										<span id='rd_details' class='ddp btn ddp-t sel'>Totals</span> /
+										<span id='rd_diff' class='ddp btn ddp-d'>Differences</span> /
+										<span id='rd_percent' class='ddp btn ddp-p'>Percent</span>
+									</th>
+								</tr>
+								<tr>
+									<th>Down</th>
+									<th class='br'>Up</th>
+									<th class='isUL'>Down</th>
+									<th class='isUL br'>Up</th>
+									<th class='is-isp'>Down</th>
+									<th class='is-isp br'>Up</th>
+									<th class='is-isp br2'>Total</th>
+									<th class='is-isp br2'>Agg.</th>
+									<th class='is-rd'>Down</th>
+									<th class='is-rd br'>Up</th>
+									<th class='is-rd br2'>Total</th>
+									<th class='is-rd br'>Agg.</th>
+								</tr>
+								<tr class='info-tr hidden'>
+									<td class='info-td p-a' colspan=100%>
+										<div class='info-s p-r hidden' >
+										<span class='close btn p-a'></span>
+										<p class='info-d'><span class='flagged'></span>Indicates that the router was rebooted at least once on the flagged date</p>
+										<p class='info-d'>Click an entry in the `Date` column to view the `Daily Usage` reports for that day</p>
+										<p class='ts-d'></p>
+										</div>
+									</td>
+								</tr>
+							</thead>
+							<tbody id="MonthlyBreakdown"></tbody>
+							<tfoot id="breakdownFooter"></tfoot>
+						</table>
+					</section>
+					<hr/>
+					<h2><span id='graphsfor'></span>  [ <span id='rld-mbd-g' class='btn' onclick="drawGraphs()" title='Re-draw these graphs'></span> ]</h2>
+					<p class='a-c'><a id='all-graphs'>All</a> <a id='no-graphs'>None</a>
+						<label for='cb-down'><input type='checkbox' id='cb-down' class='gr-cb' checked>Downloads</label>
+						<label for='cb-up'><input type='checkbox' id='cb-up' class='gr-cb' checked>Uploads</label>
+						<label for='cb-tot'><input type='checkbox' id='cb-tot' class='gr-cb' checked>Totals</label>
+						<label for='cb-cum'><input type='checkbox' id='cb-cum' class='gr-cb' checked>Cumulative </label>
+						<label for='cb-dif' class='gr-nall'><input type='checkbox' id='cb-dif' class='gr-cb' checked>Differences</label>
+						<label for='cb-difp' class='gr-nall'><input type='checkbox' id='cb-difp' class='gr-cb' checked>Differences (in %)</label>
+						<label for='cb-cdif' class='gr-nall'><input type='checkbox' id='cb-cdif' class='gr-cb' checked>Cumulative Difference</label>
+						<label for='cb-cdifp' class='gr-nall'><input type='checkbox' id='cb-cdifp' class='gr-cb' checked>Cumulative Difference (in %)</label>
+					</p>
+					<div id='mbd-graphs'>
+						<div id="gr-cb-down" class="graphdiv"></div>
+						<div id="gr-cb-up" class="graphdiv"></div>
+						<div id="gr-cb-tot" class="graphdiv"></div>
+						<div id="gr-cb-cum" class="graphdiv"></div>
+						<div id="gr-cb-dif" class="graphdiv"></div>
+						<div id="gr-cb-difp" class="graphdiv"></div>
+						<div id="gr-cb-cdif" class="graphdiv"></div>
+						<div id="gr-cb-cdifp" class="graphdiv"></div>
+					</div>
+				</div>
+
+				<div id="live-tab-section" class="tab-div p-r hidden showLive">
+					<div id='enable-lu' class='alert'>To see any meaningful information on this tab, you must set `_doLiveUpdates=1` in `config.file` on your router.</div>
+					<h2>Live Usage Report</h2>
+					<p class='nb'>Entries will be added to the tables and graphs on this tab as long as this computer/device is `awake` - this means that the updates will stop if you have a powersaving setting which automatically puts this device to sleep.  As well, the contents of the page will be reset if the page is reloaded.</p>
+					<p>The data on this tab is aggregated from the `live_data.js` file and will be updated every <span class='_updatefreq'></span>s.
+
+						<button type="button" id="luStart" class='hidden'>Start</button>
+						<button type="button" id="luStop">Stop</button>
+						<button type="button" id="luReset" class='hidden' title='Careful - this will clear all of the data from this table!'>Reset</button><br/>
+						Last update: <a id='last_update' href='' target='_blank'></a>
+					</p>
+					<section class='main-section p-r'>
+						<article class='lc'>
+							<div id='server-load-table' class='data-table'>
+								<p class='p-hr'>
+									<span class="td-time br bl a-r">
+										Time
+										<span class='icon btn p-a' title='View the contents of the live data file' ></span>
+									</span>
+									<span class="td-num a-c">1-minute</span>
+									<span class="td-num a-c">5-minute</span>
+									<span class="td-num a-c br">15-minute</span>
+								</p>
+								<div id="liveServer"> </div>
+							</div>
+						</article>
+						<article class='rc'>
+							<div id='sl-graph' class='graphdiv'></div>
+						</article>
+					</section>
+					<div id='live-graphs' class='main-section'>
+						<div id='livekbs-do-graph' class='graphdiv'></div>
+						<div id='livekbs-up-graph' class='graphdiv'></div>
+					</div>
+					<section class='main-section'>
+						<article id='current-devices' class='lc info-top p-r'>
+							<h2 id='curc'></h2>
+							<p class='p-filterIP hidden'>Filtered for: <span class='filterIP btn clear-filter'></span>
+							</p>
+							<table class='info-top p-r' >
+								<thead>
+									<tr class='info-p p-r'>
+										<th class="br bl bt a-r" rowspan=2>Time
+											<span class='info-w p-a'>
+												<span class='info btn'></span>
+												<span class='ts btn'></span>
+											</span>
+										</th>
+										<th class="cu-o bt a-c" rowspan=2>Group</th>
+										<th class="cu-d a-c br bt" rowspan=2>Device</th>
+										<th class="a-c br bt" colspan=2>Downloads</th>
+										<th class="a-c br bt" colspan=2>Uploads</th>
+									</tr>
+									<tr class='info-p p-r'>
+										<th class="td-num a-c">Total</th>
+										<th class="td-num br">KB/s</th>
+										<th class="td-num a-c">Total</th>
+										<th class="td-num br">KB/s</th>
+									</tr>
+									<tr class='info-tr hidden'>
+										<td class='info-td p-a' colspan=100%>
+											<div class='info-s p-r hidden'>
+												<span class='close btn p-a'></span>
+												<p class='info-d'>Click a device name to filter the `Active Connections`table to show only connections belonging to that device</p>
+												<p class='info-d'>Click <span class="ts"></span> to adjust the number of updates that will be retained in this table</p>
+												<p class='ts-d'>
+													Max rows in table: <input type='number' id='hmUpdateRows'>
+												</p>
+											</div>
+									</tr>
+									<tr id='blank-cu' class="p-cu btn hidden">
+										<td class="td-time br bl a-r"></td>
+										<td class="cu-o a-l"></td>
+										<td class="cu-d a-l br"></td>
+										<td class="td-num num cu_do"></td>
+										<td class="td-num br cu_do_ps"></td>
+										<td class="td-num num cu_up"></td>
+										<td class="td-num br cu_up_ps"></td>
+									</tr>
+									<tr id='blank-cu-tot' class="p-cu-tot hidden">
+										<td class="td-time br bl a-l"></td>
+										<td class="cu-o a-l"></td>
+										<td class="cu-d a-l br"></td>
+										<td class="td-num cu_do num"></td>
+										<td class="td-num br kbs-do"></td>
+										<td class="td-num cu_up num"></td>
+										<td class="td-num br kbs-up"></td>
+									</tr>
+								</thead>
+								<tbody id='curr-users'></tbody>
+								<tfoot>
+ 									<tr id='curr-users-gt' class="p-cu-gtot gtot hidden" value=0>
+										<td class="td-time br a-r">Grand Totals</td>
+										<td class="cu-o a-l"></td>
+										<td class="cu-d a-l br"></td>
+										<td id='cu-gt-do' class="td-num cu_do num" value=0></td>
+										<td id='cu-kbs-do' class="td-num br kbs-do" value=0></td>
+										<td id='cu-gt-up' class="td-num cu_up num" value=0></td>
+										<td id='cu-kbs-up' class="td-num br kbs-up" value=0></td>
+									</tr>
+								</tfoot>
+							</table>
+						</article>
+						<article class='rc p-r' id='active-connections'>
+							<h2>
+								<span id='acrc'></span> Active Connections <span class='legend internal'>Internal</span><span class='legend tcp'>TCP</span><span class='legend udp'>UDP</span><span class='legend unknown'>Unknown</span>
+							</h2>
+							<p id='acc-filter' class='p-filterIP hidden'>(filtered for <span class='filterIP btn clear-filter'></span>)</p>
+
+							<table class='info-top p-r' id="act-cons">
+								<thead>
+									<tr class='info-p p-r'>
+										<!--th class='br bl bt'>Con</th-->
+										<th class='bt bl'>Source
+											<span class='info-w p-a'>
+												<span class='info btn'></span>
+												<span class='ts btn'></span>
+											</span>
+										</th>
+										<th class='br bt'>Port</th>
+										<th class='bt' id='act-dest'>Destination</th>
+										<th class='br bt'>Port</th>
+										<th class='br bt'>Bytes</th>
+									</tr>
+									<tr class='info-tr hidden'>
+										<td class='info-td p-a' colspan=100%>
+											<div class='info-s p-r hidden' >
+												<span class='close btn p-a'></span>
+												<p class='info-d'>Click any IP address to perform a reverse IP lookup.<br/>Find the  name of the associated organization and their rough geographic location</p>
+												<p class='info-d'>Click <span class="ts"></span> to show/hide local IP addresses and set the local IP range</p>
+
+												<p class='ts-d'>
+													Show: <label for='show-internal' class='settings-cb internal' title='Show/hide connections to internal connections in the table'><input type='checkbox' id='show-internal'>Internal</label>
+													<label for='show-tcp' class='settings-cb tcp' title='Show/hide tcp cconnections in the table'><input type='checkbox' id='show-tcp'>TCP</label>
+													<label for='show-udp' class='settings-cb udp' title='Show/hide udp cconnections in the table'><input type='checkbox' id='show-udp'>UDP</label>
+													<label for='show-unknown' class='settings-cb unknown' title='Show/hide unknown cconnections in the table'><input type='checkbox' id='show-unknown'>unknown</label>
+												</p>
+												<p class='ts-d show-local'>
+													Local IPs: <input type='text' placeholder='192.168.1' id='acc-filter-ip' size=14> <br/>
+													&nbsp;&nbsp;&nbsp;CSV list - e.g., 192.168.1, 10.13.15, etc.<br/>
+													&nbsp;&nbsp;&nbsp;NB - 255.255.255.255 is automatically included
+												</p>
+
+												<p id='ip-sync' class='ts-d btn'>Sync IPs with usage-monitoring.com <span class='ip-prog hidden'> &rarr; Imported: <span id='ip-n'></span></span></p>
+											</div>
+										</td>
+									</tr>
+									<tr id='blank-acon-row' class="acon-row hidden">
+										<!--td class="conn br bl"></td-->
+										<td class="src-ip a-l bl"></td>
+										<td class="sprt a-c br"></td>
+										<td class="a-l p-r dest-ip btn"></td>
+										<td class="dprt a-c br"></td>
+										<td class="num br"></td>
+									</tr>
+								</thead>
+								<tbody id='act-cons-body'></tbody>
+							</table>
+						</article>
+					</section>
+
+				</div>
+				<div id="devices-tab-section" class="tab-div p-r hidden">
+					<h2>Groups &amp; Devices</h2>
+					<section class='main-section p-r'>
+						<p><span class='mr-int'>Reporting Interval: <span class='current-interval imp-text'></span></span>Filter: <input type='text' id='filter-results' placeholder='Filter this table'></p>
+						<table class='info-top p-r lc' id='devices-table'>
+							<thead id="devicesHeader">
+								<tr class='info-p p-r'>
+									<th class='bl bt'>
+										Group
+										<span class='icon btn p-a' title='View the contents of your `users.js` data file'></span>
+									</th>
+									<th class='bt'>Device Name</th>
+									<th class='bt'>Mac Address</th>
+									<th class='bt'>IP v4</th>
+									<th class='bt ipv6'>IP v6</th>
+									<th class='th-tot bl bt br2 click-td'>Total</th>
+									<th class='bt br2'>Percent</th>
+									<th class='bt br a-c' colspan=2>
+										Updated
+										<span class='info-w p-a'>
+											<a class='export btn' title='Export `users.js`'></a>
+											<span class='info btn'></span>
+											<span class='ts btn'></span>
+										</span>
+									</th>
+								</tr>
+								<tr class='info-tr hidden'>
+									<td class='info-td p-a' colspan=100%>
+										<div class='info-s p-r hidden' >
+											<span class='close btn p-a'></span>
+											<p class='info-d'>Since your `users.js` file was created <span id='sp_users_created' class='imp-text'></span><span class='hwncd'> and last updated <span id='sp_users_updated' class='imp-text'></span></span>, a total of <span id='sp_num_devices' class='imp-text'></span> devices have connected to your router; <span id='sp_num_active_devices' class='imp-text'></span> of which have been active during the current reporting interval.<br/>  Click <span class="ts"></span> to show/hide devices with no traffic in this reporting interval</p>
+											<hr class='info-d'/>
+											<p class='info-d'>Click an entry in the `Group` or `Device Name` column to see the data usage by date on the `Monthly Breakdown` tab</p>
+											<p class='info-d'>Click anywhere else in a row to edit the group, name and/or colour for the device</p>
+											<p class='info-d'><span class='editted'></span> indicates that the Group/Device Name information has been editted (i.e., it has been changed from what appears in your users.js file)</p>
+											<p class='info-d'>If you have not enabled the database options on the `Settings` tab, any changes you make on this tab will not be reflected on other computers/devices or in other browsers </p>
+											<p class='info-d'>If you do not want to use the database integration but do want view the YAMon reports from multiple devices, click the export icon (<a class='export btn' title='Export `users.js`'></a>) and save the file to your router. <b>NB</b> - you must stop the yamon*.sh script on your router before replacing or editing `users.js`!</p>
+											<p class='ts-d'>Devices: <span class='nad imp-text'>Show All</span> </p>
+
+											<hr class='ts-d'/>
+											<p class='ts-d'>To copy your device customizations into your `users.js` file on your router, click the export icon (<a class='export btn' title='Export `users.js`'></a>) and save the file to your router. <b>NB</b> - you must stop the yamon*.sh script on your router before replacing or editing `users.js`!</p>
+										</div>
+									</td>
+								</tr>
+								<tr id="blank-devices-row" class="hidden">
+									<td class="group bl"></td>
+									<td class="deviceName">
+										<span class="legend-colour"></span>
+										<span class="thedevice"></span>
+									</td>
+									<td class="deviceMAC"></td>
+									<td class="deviceIP"></td>
+									<td class="deviceIPv6 ip6"></td>
+									<td class="tByts bl br2 num"></td>
+									<td class="percent br2">0</td>
+									<td class="updated a-c"></td>
+									<td class="edit-d br" title="Click to edit the owner/name/colour for this device"></td>
+								</tr>
+							</thead>
+							<tbody id="devicesData"></tbody>
+							<tfoot id="devicesFooter ftotals">
+								<tr>
+									<td class="a-r" colspan="4">:::Totals:::</td>
+									<td class="ipv6"></td>
+									<td id='dt_total' class="num bl br2"></td>
+									<td class="a-c br2 percent"></td>
+									<td class="br a-c" colspan=2>-</td>
+									</tr>
+							</tfoot>
+						</table>
+
+					</section>
+				</div>
+				<div id="acses-tab-section" class="tab-div p-r hidden">
+					<h2>Access Restrictions</h2>
+
+					<p>A better way to define which devices can access the Internet when...</p>
+					<p><button class='btn' id='go2AccessRestrictions'>Set/update my Access Restrictions</button></p>
+					<p class='nb'>Proceed with caution because overly broad rules could inadvertently prevent all devices from accessing your router!  <p>If this occurs, unplugging your USB drive and manually rebooting your router should get you back in.</p>
+					<form name='setAccessRestrictions' method='POST' action='https://usage-monitoring.com/current/SetAccessRestrictions.php?t=123'>
+						<input name='_dbkey' type='hidden'></input>
+						<input name='groups' type='hidden'></input>
+					</form>
+					<p>At some point in the future, this will list your restrictions.  Right now, I need people to help test this functionality.</p>
+					<p class='nb'>Organize your devices into groups on the Settings tab *before* creating access restrictions.<br/><br/>By default, all new devices get added to the `Unknown` group and that group gets blocked whenever a restriction is in effect (so that users cannot bypass the access restrictions by spoofing their MAC address). If you have not moved your devices and/or some of the others into another group, you might not be pleased with the results!</p>
+				</div>
+
+				<div id="settings-tab-section" class="tab-div p-r hidden">
+					<h2>Settings</h2>
+					<div id='d-settings_pswd' class='hidden'>
+						<p>The settings are password protected!</p>
+						<p id='p-settings_pswd'>
+							<label for="settings_pswd">Settings Password:
+							<input type="password" name="settings_pswd" id="settings_pswd" size='24'></label>
+						</p>
+						<p id='p-settings_pswd_cb'>
+							<label for="settings_pswd_cb">
+							<input type="checkbox" name="settings_pswd_cb" id="settings_pswd_cb"> Remember the password on this device</label>
+						</p>
+					</div>
+					<h3>Adjust these options to tailor the general appearance of your reports.</h3>
+					<div id='settings-columns' class='main-section'>
+						<div id='settings-col_1'>
+							<fieldset>
+								<legend>Bandwidth Settings</legend>
+								<p class='settings-desc'>These values are set in `config.file` on your router</p>
+								<p id='p-bw_cap' title='What your ISP allows you to use each month (in GB)... now set on the server' ><label class=''>Bandwidth Allowance Cap</label>: <span class='spUsageCap'></span></p>
+								<p class='is-cap ti-6 hidden' title='Select this checkbox if only downloads (and not uploads) count against your usage cap'>
+									<input type="checkbox" id="cb-dl-o">
+									<label for="cb-dl-o">Only Downloads count towards cap</label>
+								</p>
+								<p id='p-bonus_data_txt' title='If your ISP allows `bonus` data' ><label class=''>Bonus Data</label>:<span class='bonus_data_txt'></span></p>
+								<p class='isUL ti-6' title='Select this checkbox if you have a Bonus Data usage interval (e.g. between 2-5AM)'>
+									<input type="checkbox" id="ul-redtot">
+									<label for="ul-redtot">Reduce totals by `<i>Bonus Data</i>` amounts</label>
+								</p>
+							</fieldset>
+							<fieldset>
+								<legend>Debug</legend>
+								<p title="Use files from /dev rather than /current">
+									<input type="checkbox" id="devOrCurr">
+									<label for="devOrCurr">Use `/dev` JS & CSS files</label>
+								</p>
+								<p title="Set ajaxSetup cache to true (***recommended***)">
+									<input type="checkbox" id="ajaxCache">
+									<label for="ajaxCache">Set cache=true in `$.ajaxSetup()`</label>
+								</p>
+								<p class='showISP' title="Show imported ISP data for debugging purposes">
+									<input type="checkbox" id="show-isp-out">
+									<label for="show-isp-out">Show isp-out</label>
+								</p>
+							</fieldset>
+						</div>
+						<div id='settings-col_2'>
+							<fieldset>
+								<legend>Display Options</legend>
+
+								<p><label for="defvu">Default View:</label>
+									<select id='defvu'></select>
+								</p>
+								<p title='Select the base units for values in the report (default: Automatic)'>
+									<label for="displayUnits">Display Units:</label>
+									<select name="displayUnits" id="displayUnits">
+										<option value="Auto" title='Show traffic in KB/MB/GB as appropriate'>Automatic</option>
+										<option value="B" title='Show all traffic in bytes'>Bytes</option>
+										<option value="KB" title='Show all traffic in KB'>Kilobytes</option>
+										<option value="MB" title='Show all traffic in MB'>Megabytes</option>
+										<option value="GB" title='Show all traffic in GB'>Gigabytes</option>
+										<option value="TB" title='Really!'>Terabytes</option>
+										<option value="PB" title='Really! Really?!?'>Petabytes</option>
+									</select>
+									with
+									<select name="NumDecimals" id="NumDecimals">
+										<option value="0">0</option>
+										<option value="1">1</option>
+										<option value="2">2</option>
+									</select> decimals
+								</p>
+								<p title='Show/Hide devices within each `owner` grouping (default: selected)'>
+									<input type="checkbox" id="ShowDevices" checked>
+									<label for="ShowDevices">Show Devices</label>
+								</p>
+								<p title='Show/Hide ignored/hidden devices (default: unselected)'>
+									<input type="checkbox" id="ShowHiddenDevices" checked>
+									<label for="ShowHiddenDevices">Show `Hidden` Devices</label>
+								</p>
+								<p title='Show/Hide devices with no traffic  (default: not selected)'>
+									<input type="checkbox" id="ShowZeroes">
+									<label for="ShowZeroes">Show Zero Bandwidth</label>
+								</p>
+								<p title='Show/Hide table rows and graph entries for total traffic measured at the router (default: selected)'>
+									<input id='ShowRD' type='checkbox'>
+									<label for='ShowRD'>Show Data at Router</label>
+								</p>
+								<p title='Duplicate totals at top of table (daily and monthly)'>
+									<input id='DupTotals' type='checkbox'>
+									<label for='DupTotals'>Duplicate totals row</label>
+								</p>
+								<p title='Display in dark mode'>
+									<input id='DarkMode' type='checkbox'>
+									<label for='DarkMode'>Dark mode</label>
+								</p>
+								<p title='Interval to auto refresh the reports (in seconds)'>
+									<label for="RefreshInterval">Refresh Interval:</label>
+									<input type="number" pattern='^[1-9][0-9]*$' size="4" name="Refresh" id="RefreshInterval" class='linked a-r' value="120"> sec.
+								</p>
+								<p>
+									<label for="dateFMT">Date Format:</label>
+									<select name="dateFMT" id="dateFMT">
+										<option id='dateFMT-1' value="0" title='Month day year'>Mon Sep 15 2014</option>
+										<option id='dateFMT-2' value="1" title='Day month Year'>Mon 15 Sep 2014</option>
+										<option id='dateFMT-3' value="2" title='Day month-number year'>Mon 15 09 2014</option>
+										<option id='dateFMT-4' value="4" title='Year month-number day'>Mon 15 09 2014</option>
+									</select>
+									separated by
+									<select name="dateSep" id="dateSep">
+										<option value=' ' title='a space'> </option>
+										<option value='-' title='a dash'>-</option>
+										<option value='/' title='a slash'>/</option>
+										<option value='.' title='a dot'>.</option>
+									</select>
+								</p>
+								<p title='Set the speed of the loading animations'>
+									<!--input type="checkbox" id="SuppressUpdates">
+									<label for="SuppressUpdates">Suppress loading alerts</label-->
+									<label for="Animations">Animations:</label>
+									<select name="Animations" id="Animations">
+										<option value='0'>None</option>
+										<option value='1' selected>Normal</option>
+										<option value='2'>Fast</option>
+										<option value='4'>Really Fast</option>
+									</select>
+								</p>
+								<p title='Check whether YAMons files have been updated'>
+									Check for updates: <select name="check4Updates" id="check4Updates">
+										<option value='n' title='Never check for updates... *not* recommended!'>Never</option>
+										<option value='a' title='Check at most once per day'>Every time</option>
+										<option value='w' title='Check weekly'>Weekly</option>
+										<option value='m' title='Check monthly'>Monthly</option>
+									</select>
+									<button onClick='checkFiles()'>Now!</button>
+								</p>
+							</fieldset>
+						</div>
+						<div id='settings-col_3'>
+							<fieldset>
+								<legend>Database Integration</legend>
+								<p class='settings-desc'><b>Share settings between devices:</b></p>
+								<p id='dbkey-needtoclick'>Click the `Get Key` button below to create a database for your settings at usage-monitoring.com.</p>
+								<p id='dbkey-sharing' class='hidden'>Your  router has been configured to share all of the YAMon settings with all devices that access these reports.</p>
+								<p class='a-c'><button id='getKey' onclick='createdb()'>Get Key</button></p>
+								<p><input type='text' size=36 disabled='disabled' id='dbkey'></p>
+								<p id='dbkey-clicked'>Copy the string from the field above and paste it into `config.file` on your router.<br/>
+								Then run `restart.sh` on your router and all of your devices will share the same YAMon settings.</p>
+								<p id='p-useHTTPS'><input type='checkbox' id='useHTTPS'><label for='useHTTPS'> Use HTTPS</label></p>
+								<p id='p-autoSave'><input type='checkbox' id='autoSave'><label for='autoSave'> Auto save any changes</label></p>
+							</fieldset>
+							<fieldset>
+								<legend>Other Items</legend>
+								<p>Show field to <a class='getMessage btn' data-msg='show-key'>enter donation key</a></p>
+								<p><a href="mailto:questions@usage-monitoring.com?subject=Please send my YAMon donation key&body=Al - I recently made a donation and haven't gotten my key yet... can you send it to me please?" target='_blank'>Pester Al to get a donation key</p>
+								<p><a href='//usage-monitoring.com/sign-up.php' target='_blank'>Sign up to get updates notifications</a></p>
+								<p class='hidden'>Share `<a class='shareRouter btn'>router.js</a>` data</a></p>
+								<p><a href='/'>Router GUI</a></p>
+							</fieldset>
+						</div>
+						<div id='settings-col_4'>
+							<fieldset>
+								<legend>ISP Settings</legend>
+								<p class='settings-desc'>Use these settings to incorporate data from your ISP into the YAMon reports.</p>
+								<p title='Show/Hide the ISP data elements in the tables and graphs (default: not selected)'>
+									<input type="checkbox" id="showISP">
+									<label for="showISP" checked>Show ISP Columns</label>
+								</p>
+								 <p class='showISP ti-17' title='Name of your ISP (e.g.,Rogers, Verizon, etc.)... for display only'>
+									<label>ISP Name:</label>
+									<select id='isp-format' name='isp-format'></select>
+								</p>
+								 <p class='showISP ti-17' title='URL to ISP usage report'>
+									<label for="isp-url">Usage URL:</label>
+									<input type="url" name="isp-url" id="isp-url" class='linkedURL' size='18' placeholder="URL to ISP report">
+									<a class="isp-url hidden" target="_blank">Link</a>
+								</p>
+								 <p class='showISP ti-17' title='Last time you updated data'>
+									<label>Last update:</label>  <span id='isp-lcd'>xxx</span>
+
+								</p>
+								<p class='showISP ti-17' title='Reminders about ISP data'>
+									<label  for="isp-reminders">Reminders:</label> <select name="isp-reminders" id="isp-reminders">
+										<option value='n' title='Never remind... *not* recommended!'>Never</option>
+										<option value='a' title='Remind at most once per day'>Every time</option>
+										<option value='w' title='Remind weekly'>Weekly</option>
+										<option value='b' title='Remind bi-weekly'>Bi-weekly</option>
+										<option value='m' title='Remind monthly'>Monthly</option>
+									</select>
+								</p>
+								 <p class='showISP a-c' title='Import ISP data'>
+									<button onclick="settings('isp')">Import Data</button>
+								</p>
+							</fieldset>
+
+						</div>
+					</div>
+					<p class='settings-btns a-c p-r'>
+						<button onclick="settings('export')">Export Settings</button>
+						<button onclick="settings('import')">Import Settings</button>
+						<button onclick="settings('reset')">Reset Settings</button>
+						<button id='sv-btn' onclick="saveSettings2db()">Save Settings</button>
+						<span class='icon btn p-a l2c'></span>
+					</p>
+				</div>
+
+				<div id="help-tab-section" class="tab-div p-r hidden">
+					<h2>YAMon - Yet Another Monitor</h2>
+					<h3>By: Al Caughey </h3>
+					<p>Version:<span class='scriptVersion'></span></p>
+
+					<hr/>
+					<p>For online help, FAQs, etc. either go to:</p>
+					<ul>
+						<li><a href='https://usage-monitoring.com' target='_blank'>https://usage-monitoring.com</a></li>
+						<li><a href='http://www.dd-wrt.com/phpBB2/viewtopic.php?p=1050090' target='_blank'>the YAMon 3.x forum at DD-WRT</a></li>
+						<li><a href='http://www.dd-wrt.com/phpBB2/viewtopic.php?t=259806' target='_blank'>the YAMon 2,x forum at DD-WRT</a></li>
+					</ul>
+
+					<p>Otherwise, if you have any questions/suggestions or find an error, drop me a <a href="mailto:questions@usage-monitoring.com?subject=Yet Another Monitor Questions%2FComments">line</a>.  I'll do my best to respond ASAP!</p>
+					<hr/>
+					<p>YAMon is based upon: <a href='http://code.google.com/p/wrtbwmon/' target='_blank'>wrtbwmon</a> by Emmanuel Brucy &  <a href='http://code.google.com/p/lal-projects/' target='_blank'>bw_monitor</a> by FezJay; and, adapted from modifications by: `bpsmicro`,`OrionShock` & others.  Thanks to `spanman` and too many others to mention here who've made suggestion for features & GUI improvements and/or patiently helped me find and resolve bugs</p>
+					<p>Thanks also to everyone who's made a <a href='https://usage-monitoring.com/donations.php'>donation</a>... I *really* appreciate those!  In case it is not blatantly obvious, you can make donations via Paypal.</p>
+				</div>
+				<div id='myAlert' class='dlog hidden'>
+					<p>Alert
+						<span class='mab p-a'>
+							<span id='alert-clear' class='btn' title='Click to clear this list of errors'></span>
+							<span class='dlog-close btn' title='Click to close this dialog'></span>
+						</span>
+					</p>
+					<div id='myAlert-body'></div>
+				</div>
+				<div id='edit-device' class='dlog hidden p-a' >
+					<p class='ed-title'>Edit Device Info:<span class="dlog-close btn p-a" title="Click to close this dialog"></span></p>
+					<p><label class='edl a-r'>Device Mac:</label><span id='ed-mac'>00:00:00:00:00:00</span></p>
+					<p id="sp-group-list"><label class='edl a-r' for='ed-owner'>Owner:</label><input id='ed-owner' placeholder='Set device owner'><select id="group-list" size=5></select></p>
+					<p><label class='edl a-r' for='ed-name'>Name:</label><input id='ed-name' placeholder='Set device name'></p>
+					<p class='ed-key'><label class='edl a-r' for='ed-key'>Key:</label><input id='ed-key' placeholder='Device Key'></p>
+					<p><label class='edl a-r' for='ed-colour'>Colour:</label><input type='color' id='ed-colour' placeholder='Pick device colour' title='Enter the HTML colour name or a valid hex colour code or pick from the options below'></p>
+					<h3>Pick colors:</h3>
+					<p><span class="dc-p btn c-p" id='bl'>Blacks</span><span class="dc-p btn c-p" id='gr'>Grays</span><span class="dc-p btn c-p" id='blu'>Blues</span><span class="dc-p btn c-p" id='gre'>Greens</span><span class="dc-p btn c-p" id='ye'>Yellows</span><span class="dc-p btn c-p" id='br'>Browns</span><span class="dc-p btn c-p" id='or'>Oranges</span><span class="dc-p btn c-p" id='re'>Reds</span><span class="dc-p btn c-p" id='pi'>Pinks</span><span class="dc-p btn c-p" id='pu'>Purples</span></p>
+					<p><span class="l-c c-bl" style="background:#000000" title="Black"> </span>
+					<span class="l-c c-bl" style="background:#0C090A" title="Night"> </span>
+					<span class="l-c c-bl" style="background:#2c3539" title="Gunmetal"> </span>
+					<span class="l-c c-bl" style="background:#2b1b17" title="Midnight"> </span>
+					<span class="l-c c-bl" style="background:#34282c" title="Charcoal"> </span>
+					<span class="l-c c-bl" style="background:#25383c" title="Dark Slate Grey"> </span>
+					<span class="l-c c-bl" style="background:#3b3131" title="Oil"> </span>
+					<span class="l-c c-bl" style="background:#413839" title="Black Cat"> </span>
+					<span class="l-c c-bl" style="background:#3D3C3A" title="Iridium"> </span>
+					<span class="l-c c-bl" style="background:#463e3f" title="Black Eel"> </span>
+					<span class="l-c c-bl" style="background:#4c4646" title="Black Cow"> </span>
+					<span class="l-c c-gr" style="background:#504a4b" title="Gray Wolf"> </span>
+					<span class="l-c c-gr" style="background:#565051" title="Vampire Gray"> </span>
+					<span class="l-c c-gr" style="background:#5c5858" title="Gray Dolphin"> </span>
+					<span class="l-c c-gr" style="background:#625D5D" title="Carbon Gray"> </span>
+					<span class="l-c c-gr" style="background:#666362" title="Ash Gray"> </span>
+					<span class="l-c c-gr" style="background:#6d6968" title="Cloudy Gray"> </span>
+					<span class="l-c c-gr" style="background:#726e6d" title="Smokey Gray"> </span>
+					<span class="l-c c-gr" style="background:#736f6e" title="Gray"> </span>
+					<span class="l-c c-gr" style="background:#837E7C" title="Granite"> </span>
+					<span class="l-c c-gr" style="background:#848482" title="Battleship Gray"> </span>
+					<span class="l-c c-gr" style="background:#B6B6B4" title="Gray Cloud"> </span>
+					<span class="l-c c-gr" style="background:#D1D0CE" title="Gray Goose"> </span>
+					<span class="l-c c-gr" style="background:#E5E4E2" title="Platinum"> </span>
+					<span class="l-c c-gr" style="background:#BCC6CC" title="Metallic Silver"> </span>
+					<span class="l-c c-blu" style="background:#98afc7" title="Blue Gray"> </span>
+					<span class="l-c c-blu" style="background:#6d7b8d" title="Light Slate Gray"> </span>
+					<span class="l-c c-blu" style="background:#657383" title="Slate Gray"> </span>
+					<span class="l-c c-blu" style="background:#616d7e" title="Jet Gray"> </span>
+					<span class="l-c c-blu" style="background:#646d7e" title="Mist Blue"> </span>
+					<span class="l-c c-blu" style="background:#566d7e" title="Marble Blue"> </span>
+					<span class="l-c c-blu" style="background:#737ca1" title="Slate Blue"> </span>
+					<span class="l-c c-blu" style="background:#4863a0" title="Steel Blue"> </span>
+					<span class="l-c c-blu" style="background:#2b547e" title="Blue Jay"> </span>
+					<span class="l-c c-blu" style="background:#2b3856" title="Dark Slate Blue"> </span>
+					<span class="l-c c-blu" style="background:#151b54" title="Midnight Blue"> </span>
+					<span class="l-c c-blu" style="background:#000080" title="Navy Blue"> </span>
+					<span class="l-c c-blu" style="background:#342d7e" title="Blue Whale"> </span>
+					<span class="l-c c-blu" style="background:#15317e" title="Lapis Blue"> </span>
+					<span class="l-c c-blu" style="background:#151b8d" title="Cornflower Blue"> </span>
+					<span class="l-c c-blu" style="background:#0000A0" title="Earth Blue"> </span>
+					<span class="l-c c-blu" style="background:#0020C2" title="Cobalt Blue"> </span>
+					<span class="l-c c-blu" style="background:#0041C2" title="Blueberry Blue"> </span>
+					<span class="l-c c-blu" style="background:#2554c7" title="Sapphire Blue"> </span>
+					<span class="l-c c-blu" style="background:#1569c7" title="Blue Eyes"> </span>
+					<span class="l-c c-blu" style="background:#2b60de" title="Royal Blue"> </span>
+					<span class="l-c c-blu" style="background:#1F45FC" title="Blue Orchid"> </span>
+					<span class="l-c c-blu" style="background:#6960ec" title="Blue Lotus"> </span>
+					<span class="l-c c-blu" style="background:#736aff" title="Light Slate Blue"> </span>
+					<span class="l-c c-blu" style="background:#357ec7" title="Slate Blue"> </span>
+					<span class="l-c c-blu" style="background:#368BC1" title="Glacial Blue Ice"> </span>
+					<span class="l-c c-blu" style="background:#488ac7" title="Silk Blue"> </span>
+					<span class="l-c c-blu" style="background:#3090c7" title="Blue Ivy"> </span>
+					<span class="l-c c-blu" style="background:#659ec7" title="Blue Koi"> </span>
+					<span class="l-c c-blu" style="background:#87afc7" title="Columbia Blue"> </span>
+					<span class="l-c c-blu" style="background:#95b9c7" title="Baby Blue"> </span>
+					<span class="l-c c-blu" style="background:#728fce" title="Light Steel Blue"> </span>
+					<span class="l-c c-blu" style="background:#2b65ec" title="Ocean Blue"> </span>
+					<span class="l-c c-blu" style="background:#306eff" title="Blue Ribbon"> </span>
+					<span class="l-c c-blu" style="background:#157dec" title="Blue Dress"> </span>
+					<span class="l-c c-blu" style="background:#1589ff" title="Dodger Blue"> </span>
+					<span class="l-c c-blu" style="background:#6495ED" title="Cornflower Blue"> </span>
+					<span class="l-c c-blu" style="background:#6698ff" title="Sky Blue"> </span>
+					<span class="l-c c-blu" style="background:#38acec" title="Butterfly Blue"> </span>
+					<span class="l-c c-blu" style="background:#56a5ec" title="Iceberg"> </span>
+					<span class="l-c c-blu" style="background:#5cb3ff" title="Crystal Blue"> </span>
+					<span class="l-c c-blu" style="background:#3bb9ff" title="Deep Sky Blue"> </span>
+					<span class="l-c c-blu" style="background:#79baec" title="Denim Blue"> </span>
+					<span class="l-c c-blu" style="background:#82cafa" title="Light Sky Blue"> </span>
+					<span class="l-c c-blu" style="background:#82caff" title="Day Sky Blue"> </span>
+					<span class="l-c c-blu" style="background:#a0cfec" title="Jeans Blue"> </span>
+					<span class="l-c c-blu" style="background:#b7ceec" title="Blue Angel"> </span>
+					<span class="l-c c-blu" style="background:#b4cfec" title="Pastel Blue"> </span>
+					<span class="l-c c-blu" style="background:#c2dfff" title="Sea Blue"> </span>
+					<span class="l-c c-blu" style="background:#c6deff" title="Powder Blue"> </span>
+					<span class="l-c c-blu" style="background:#afdcec" title="Coral Blue"> </span>
+					<span class="l-c c-blu" style="background:#addfff" title="Light Blue"> </span>
+					<span class="l-c c-blu" style="background:#bdedff" title="Robin Egg Blue"> </span>
+					<span class="l-c c-blu" style="background:#CFECEC" title="Pale Blue Lily"> </span>
+					<span class="l-c c-blu" style="background:#e0ffff" title="Light Cyan"> </span>
+					<span class="l-c c-blu" style="background:#EBF4FA" title="Water"> </span>
+					<span class="l-c c-blu" style="background:#F0F8FF" title="AliceBlue"> </span>
+					<span class="l-c c-blu" style="background:#F0FFFF" title="Azure"> </span>
+					<span class="l-c c-blu" style="background:#CCFFFF" title="Light Slate"> </span>
+					<span class="l-c c-blu" style="background:#93FFE8" title="Light Aquamarine"> </span>
+					<span class="l-c c-blu" style="background:#9afeff" title="Electric Blue"> </span>
+					<span class="l-c c-blu" style="background:#7FFFD4" title="Aquamarine"> </span>
+					<span class="l-c c-blu" style="background:#00ffff;" title="Cyan or Aqua"> </span>
+					<span class="l-c c-blu" style="background:#7DFDFE;" title="Tron Blue"> </span>
+					<span class="l-c c-blu" style="background:#57feff" title="Blue Zircon"> </span>
+					<span class="l-c c-blu" style="background:#8eebec" title="Blue Lagoon"> </span>
+					<span class="l-c c-blu" style="background:#50ebec" title="Celeste"> </span>
+					<span class="l-c c-blu" style="background:#4ee2ec" title="Blue Diamond"> </span>
+					<span class="l-c c-blu" style="background:#81D8D0" title="Tiffany Blue"> </span>
+					<span class="l-c c-blu" style="background:#92c7c7" title="Cyan Opaque"> </span>
+					<span class="l-c c-blu" style="background:#77bfc7" title="Blue Hosta"> </span>
+					<span class="l-c c-blu" style="background:#78C7C7" title="Northern Lights Blue"> </span>
+					<span class="l-c c-blu" style="background:#48cccd" title="Medium Turquoise"> </span>
+					<span class="l-c c-blu" style="background:#43c6db" title="Turquoise"> </span>
+					<span class="l-c c-blu" style="background:#46c7c7" title="Jellyfish"> </span>
+					<span class="l-c c-gre" style="background:#43bfc7" title="Macaw Blue Green"> </span>
+					<span class="l-c c-gre" style="background:#3EA99F" title="Light Sea Green"> </span>
+					<span class="l-c c-gre" style="background:#3b9c9c;" title="Dark Turquoise"> </span>
+					<span class="l-c c-gre" style="background:#438D80" title="Sea Turtle Green"> </span>
+					<span class="l-c c-gre" style="background:#348781" title="Medium Aquamarine"> </span>
+					<span class="l-c c-gre" style="background:#307D7E" title="Greenish Blue"> </span>
+					<span class="l-c c-gre" style="background:#5e7d7e" title="Grayish Turquoise"> </span>
+					<span class="l-c c-gre" style="background:#4c787e" title="Beetle Green"> </span>
+					<span class="l-c c-gre" style="background:#008080" title="Teal"> </span>
+					<span class="l-c c-gre" style="background:#4e8975" title="Sea Green"> </span>
+					<span class="l-c c-gre" style="background:#78866B" title="Camouflage Green"> </span>
+					<span class="l-c c-gre" style="background:#848b79" title="Sage Green"> </span>
+					<span class="l-c c-gre" style="background:#617c58" title="Hazel Green"> </span>
+					<span class="l-c c-gre" style="background:#728C00" title="Venom Green"> </span>
+					<span class="l-c c-gre" style="background:#667c26" title="Fern Green"> </span>
+					<span class="l-c c-gre" style="background:#254117" title="Dark Forrest Green"> </span>
+					<span class="l-c c-gre" style="background:#306754" title="Medium Sea Green"> </span>
+					<span class="l-c c-gre" style="background:#347235" title="Medium Forest Green"> </span>
+					<span class="l-c c-gre" style="background:#437c17" title="Seaweed Green"> </span>
+					<span class="l-c c-gre" style="background:#387c44" title="Pine Green"> </span>
+					<span class="l-c c-gre" style="background:#347c2c" title="Jungle Green"> </span>
+					<span class="l-c c-gre" style="background:#347c17" title="Shamrock Green"> </span>
+					<span class="l-c c-gre" style="background:#348017" title="Medium Spring Green"> </span>
+					<span class="l-c c-gre" style="background:#4e9258" title="Forest Green"> </span>
+					<span class="l-c c-gre" style="background:#6AA121" title="Green Onion"> </span>
+					<span class="l-c c-gre" style="background:#4aa02c" title="Spring Green"> </span>
+					<span class="l-c c-gre" style="background:#41a317" title="Lime Green"> </span>
+					<span class="l-c c-gre" style="background:#3EA055" title="Clover Green"> </span>
+					<span class="l-c c-gre" style="background:#6CBB3C" title="Green Snake"> </span>
+					<span class="l-c c-gre" style="background:#6cc417" title="Alien Green"> </span>
+					<span class="l-c c-gre" style="background:#4cc417" title="Green Apple"> </span>
+					<span class="l-c c-gre" style="background:#52d017" title="Yellow Green"> </span>
+					<span class="l-c c-gre" style="background:#4cc552" title="Kelly Green"> </span>
+					<span class="l-c c-gre" style="background:#54c571" title="Zombie Green"> </span>
+					<span class="l-c c-gre" style="background:#99c68e" title="Frog Green"> </span>
+					<span class="l-c c-gre" style="background:#89C35C" title="Green Peas"> </span>
+					<span class="l-c c-gre" style="background:#85BB65" title="Dollar Bill Green"> </span>
+					<span class="l-c c-gre" style="background:#8bb381" title="Dark Sea Green"> </span>
+					<span class="l-c c-gre" style="background:#9CB071" title="Iguana Green"> </span>
+					<span class="l-c c-gre" style="background:#B2C248" title="Avocado Green"> </span>
+					<span class="l-c c-gre" style="background:#9DC209" title="Pistachio Green"> </span>
+					<span class="l-c c-gre" style="background:#A1C935" title="Salad Green"> </span>
+					<span class="l-c c-gre" style="background:#7fe817" title="Hummingbird Green"> </span>
+					<span class="l-c c-gre" style="background:#59e817" title="Nebula Green"> </span>
+					<span class="l-c c-gre" style="background:#57e964" title="Stoplight Go Green"> </span>
+					<span class="l-c c-gre" style="background:#64e986" title="Algae Green"> </span>
+					<span class="l-c c-gre" style="background:#5efb6e" title="Jade Green"> </span>
+					<span class="l-c c-gre" style="background:#00ff00" title="Green"> </span>
+					<span class="l-c c-gre" style="background:#5ffb17" title="Emerald Green"> </span>
+					<span class="l-c c-gre" style="background:#87f717" title="Lawn Green"> </span>
+					<span class="l-c c-gre" style="background:#8afb17" title="Chartreuse"> </span>
+					<span class="l-c c-gre" style="background:#6afb92" title="Dragon Green"> </span>
+					<span class="l-c c-gre" style="background:#98FF98" title="Mint green"> </span>
+					<span class="l-c c-gre" style="background:#b5eaaa" title="Green Thumb"> </span>
+					<span class="l-c c-gre" style="background:#c3fdb8" title="Light Jade"> </span>
+					<span class="l-c c-gre" style="background:#ccfb5d" title="Tea Green"> </span>
+					<span class="l-c c-gre" style="background:#b1fb17" title="Green Yellow"> </span>
+					<span class="l-c c-gre" style="background:#bce954" title="Slime Green"> </span>
+					<span class="l-c c-ye" style="background:#edda74" title="Goldenrod"> </span>
+					<span class="l-c c-ye" style="background:#ede275" title="Harvest Gold"> </span>
+					<span class="l-c c-ye" style="background:#ffe87c" title="Sun Yellow"> </span>
+					<span class="l-c c-ye" style="background:#ffff00" title="Yellow"> </span>
+					<span class="l-c c-ye" style="background:#fff380" title="Corn Yellow"> </span>
+					<span class="l-c c-ye" style="background:#FFFFC2" title="Parchment"> </span>
+					<span class="l-c c-ye" style="background:#FFFFCC" title="Cream"> </span>
+					<span class="l-c c-ye" style="background:#fff8c6" title="Lemon Chiffon"> </span>
+					<span class="l-c c-ye" style="background:#FFF8DC" title="Cornsilk"> </span>
+					<span class="l-c c-ye" style="background:#F5F5DC" title="Beige"> </span>
+					<span class="l-c c-ye" style="background:#FBF6D9" title="Blonde"> </span>
+					<span class="l-c c-ye" style="background:#FAEBD7" title="AntiqueWhite"> </span>
+					<span class="l-c c-ye" style="background:#F7E7CE" title="Champagne"> </span>
+					<span class="l-c c-ye" style="background:#FFEBCD" title="BlanchedAlmond"> </span>
+					<span class="l-c c-ye" style="background:#F3E5AB" title="Vanilla"> </span>
+					<span class="l-c c-br" style="background:#ece5b6" title="Tan Brown"> </span>
+					<span class="l-c c-br" style="background:#FFE5B4" title="Peach"> </span>
+					<span class="l-c c-ye" style="background:#FFDB58" title="Mustard"> </span>
+					<span class="l-c c-ye" style="background:#FFD801" title="Rubber Ducky Yellow"> </span>
+					<span class="l-c c-ye" style="background:#fdd017" title="Bright Gold"> </span>
+					<span class="l-c c-ye" style="background:#eac117" title="Golden brown"> </span>
+					<span class="l-c c-br" style="background:#F2BB66" title="Macaroni and Cheese"> </span>
+					<span class="l-c c-ye" style="background:#fbb917" title="Saffron"> </span>
+					<span class="l-c c-ye" style="background:#fbb117" title="Beer"> </span>
+					<span class="l-c c-ye" style="background:#FFA62F" title="Cantaloupe"> </span>
+					<span class="l-c c-ye" style="background:#e9ab17" title="Bee Yellow"> </span>
+					<span class="l-c c-br" style="background:#E2A76F" title="Brown Sugar"> </span>
+					<span class="l-c c-br" style="background:#DEB887" title="BurlyWood"> </span>
+					<span class="l-c c-br" style="background:#FFCBA4" title="Deep Peach"> </span>
+					<span class="l-c c-br" style="background:#c9be62" title="Ginger Brown"> </span>
+					<span class="l-c c-ye" style="background:#e8a317" title="School Bus Yellow"> </span>
+					<span class="l-c c-br" style="background:#ee9a4d" title="Sandy Brown"> </span>
+					<span class="l-c c-br" style="background:#c8b560" title="Fall Leaf Brown"> </span>
+					<span class="l-c c-br" style="background:#d4a017" title="Orange Gold"> </span>
+					<span class="l-c c-br" style="background:#C2B280" title="Sand"> </span>
+					<span class="l-c c-br" style="background:#c7a317" title="Cookie Brown"> </span>
+					<span class="l-c c-br" style="background:#c68e17" title="Caramel"> </span>
+					<span class="l-c c-br" style="background:#B5A642" title="Brass"> </span>
+					<span class="l-c c-br" style="background:#ada96e" title="Khaki"> </span>
+					<span class="l-c c-br" style="background:#C19A6B" title="Camel brown"> </span>
+					<span class="l-c c-br" style="background:#CD7F32" title="Bronze"> </span>
+					<span class="l-c c-br" style="background:#C88141" title="Tiger Orange"> </span>
+					<span class="l-c c-br" style="background:#c58917" title="Cinnamon"> </span>
+					<span class="l-c c-br" style="background:#AF9B60" title="Bullet Shell"> </span>
+					<span class="l-c c-br" style="background:#af7817" title="Dark Goldenrod"> </span>
+					<span class="l-c c-br" style="background:#B87333" title="Copper"> </span>
+					<span class="l-c c-br" style="background:#966F33" title="Wood"> </span>
+					<span class="l-c c-br" style="background:#806517" title="Oak Brown"> </span>
+					<span class="l-c c-br" style="background:#827839" title="Moccasin"> </span>
+					<span class="l-c c-br" style="background:#827b60" title="Army Brown"> </span>
+					<span class="l-c c-br" style="background:#786D5F" title="Sandstone"> </span>
+					<span class="l-c c-br" style="background:#493D26" title="Mocha"> </span>
+					<span class="l-c c-br" style="background:#483C32" title="Taupe"> </span>
+					<span class="l-c c-br" style="background:#6F4E37" title="Coffee"> </span>
+					<span class="l-c c-br" style="background:#835C3B" title="Brown Bear"> </span>
+					<span class="l-c c-br" style="background:#7f5217" title="Red Dirt"> </span>
+					<span class="l-c c-br" style="background:#7f462c" title="Sepia"> </span>
+					<span class="l-c c-or" style="background:#c47451" title="Orange Salmon"> </span>
+					<span class="l-c c-or" style="background:#c36241" title="Rust"> </span>
+					<span class="l-c c-or" style="background:#c35817" title="Red Fox"> </span>
+					<span class="l-c c-or" style="background:#c85a17" title="Chocolate"> </span>
+					<span class="l-c c-or" style="background:#CC6600" title="Sedona"> </span>
+					<span class="l-c c-or" style="background:#e56717" title="Papaya Orange"> </span>
+					<span class="l-c c-or" style="background:#e66c2c" title="Halloween Orange"> </span>
+					<span class="l-c c-or" style="background:#f87217" title="Pumpkin Orange"> </span>
+					<span class="l-c c-or" style="background:#f87431;" title="Construction Cone Orange"> </span>
+					<span class="l-c c-or" style="background:#e67451" title="Sunrise Orange"> </span>
+					<span class="l-c c-or" style="background:#FF8040;" title="Mango Orange"> </span>
+					<span class="l-c c-or" style="background:#f88017" title="Dark Orange"> </span>
+					<span class="l-c c-or" style="background:#FF7F50" title="Coral"> </span>
+					<span class="l-c c-or" style="background:#f88158" title="Basket Ball Orange"> </span>
+					<span class="l-c c-or" style="background:#f9966b" title="Light Salmon"> </span>
+					<span class="l-c c-or" style="background:#e78a61" title="Tangerine"> </span>
+					<span class="l-c c-or" style="background:#e18b6b" title="Dark Salmon"> </span>
+					<span class="l-c c-or" style="background:#e77471" title="Light Coral"> </span>
+					<span class="l-c c-or" style="background:#f75d59" title="Bean Red"> </span>
+					<span class="l-c c-or" style="background:#e55451" title="Valentine Red"> </span>
+					<span class="l-c c-or" style="background:#e55b3c" title="Shocking Orange"> </span>
+					<span class="l-c c-re" style="background:#ff0000" title="Red"> </span>
+					<span class="l-c c-re" style="background:#FF2400" title="Scarlet"> </span>
+					<span class="l-c c-re" style="background:#f62217" title="Ruby Red"> </span>
+					<span class="l-c c-re" style="background:#F70D1A" title="Ferrari Red"> </span>
+					<span class="l-c c-re" style="background:#f62817" title="Fire Engine Red"> </span>
+					<span class="l-c c-re" style="background:#e42217" title="Lava Red"> </span>
+					<span class="l-c c-re" style="background:#e41b17" title="Love Red"> </span>
+					<span class="l-c c-re" style="background:#DC381F" title="Grapefruit"> </span>
+					<span class="l-c c-re" style="background:#C34A2C" title="Chestnut Red"> </span>
+					<span class="l-c c-re" style="background:#c24641" title="Cherry Red"> </span>
+					<span class="l-c c-re" style="background:#C04000" title="Mahogany"> </span>
+					<span class="l-c c-re" style="background:#c11b17" title="Chilli Pepper"> </span>
+					<span class="l-c c-re" style="background:#9F000F" title="Cranberry"> </span>
+					<span class="l-c c-re" style="background:#990012" title="Red Wine"> </span>
+					<span class="l-c c-re" style="background:#8C001A" title="Burgundy"> </span>
+					<span class="l-c c-re" style="background:#954535" title="Chestnut"> </span>
+					<span class="l-c c-re" style="background:#7e3517" title="Blood Red"> </span>
+					<span class="l-c c-re" style="background:#8a4117" title="Sienna"> </span>
+					<span class="l-c c-re" style="background:#7e3817" title="Sangria"> </span>
+					<span class="l-c c-re" style="background:#800517" title="Firebrick"> </span>
+					<span class="l-c c-re" style="background:#810541" title="Maroon"> </span>
+					<span class="l-c c-re" style="background:#7d0541" title="Plum Pie"> </span>
+					<span class="l-c c-re" style="background:#7e354d" title="Velvet Maroon"> </span>
+					<span class="l-c c-re" style="background:#7d0552" title="Plum Velvet"> </span>
+					<span class="l-c c-re" style="background:#7f4e52" title="Rosy Finch"> </span>
+					<span class="l-c c-re" style="background:#7f5a58" title="Puce"> </span>
+					<span class="l-c c-re" style="background:#7f525d" title="Dull Purple"> </span>
+					<span class="l-c c-re" style="background:#b38481" title="Rosy Brown"> </span>
+					<span class="l-c c-re" style="background:#c5908e" title="Khaki Rose"> </span>
+					<span class="l-c c-re" style="background:#c48189" title="Pink Bow"> </span>
+					<span class="l-c c-re" style="background:#c48793" title="Lipstick Pink"> </span>
+					<span class="l-c c-re" style="background:#e8adaa" title="Rose"> </span>
+					<span class="l-c c-re" style="background:#EDC9AF" title="Desert Sand"> </span>
+					<span class="l-c c-pi" style="background:#fbbbb9" title="Misty Rose"> </span>
+					<span class="l-c c-pi" style="background:#faafbe" title="Pink"> </span>
+					<span class="l-c c-pi" style="background:#faafba" title="Light Pink"> </span>
+					<span class="l-c c-pi" style="background:#f9a7b0" title="Flamingo Pink"> </span>
+					<span class="l-c c-pi" style="background:#e7a1b0" title="Pink Rose"> </span>
+					<span class="l-c c-pi" style="background:#e799a3" title="Pink Daisy"> </span>
+					<span class="l-c c-pi" style="background:#E38AAE" title="Cadillac Pink"> </span>
+					<span class="l-c c-pi" style="background:#f778a1;" title="Carnation Pink"> </span>
+					<span class="l-c c-pi" style="background:#e56e94" title="Blush Red"> </span>
+					<span class="l-c c-pi" style="background:#F660AB" title="Hot Pink"> </span>
+					<span class="l-c c-pi" style="background:#FC6C85" title="Watermelon Pink"> </span>
+					<span class="l-c c-pi" style="background:#f6358a" title="Violet Red"> </span>
+					<span class="l-c c-pi" style="background:#f52887" title="Deep Pink"> </span>
+					<span class="l-c c-pi" style="background:#e45e9d" title="Pink Cupcake"> </span>
+					<span class="l-c c-pi" style="background:#e4287c" title="Pink Lemonade"> </span>
+					<span class="l-c c-pi" style="background:#F535AA" title="Neon Pink"> </span>
+					<span class="l-c c-pi" style="background:#ff00ff" title="Magenta"> </span>
+					<span class="l-c c-pi" style="background:#e3319d" title="Dimorphotheca Magenta"> </span>
+					<span class="l-c c-pi" style="background:#f433ff" title="Bright Neon Pink"> </span>
+					<span class="l-c c-pi" style="background:#d16587" title="Pale Violet Red"> </span>
+					<span class="l-c c-pi" style="background:#c25a7c" title="Tulip Pink"> </span>
+					<span class="l-c c-pi" style="background:#ca226b" title="Medium Violet Red"> </span>
+					<span class="l-c c-pi" style="background:#c12869" title="Rogue Pink"> </span>
+					<span class="l-c c-pi" style="background:#c12267" title="Burnt Pink"> </span>
+					<span class="l-c c-pi" style="background:#c25283" title="Bashful Pink"> </span>
+					<span class="l-c c-pi" style="background:#c12283" title="Carnation Pink"> </span>
+					<span class="l-c c-pi" style="background:#b93b8f" title="Plum"> </span>
+					<span class="l-c c-pu" style="background:#7e587e" title="Viola Purple"> </span>
+					<span class="l-c c-pu" style="background:#571b7e" title="Purple Iris"> </span>
+					<span class="l-c c-pu" style="background:#583759" title="Plum Purple"> </span>
+					<span class="l-c c-pu" style="background:#4B0082" title="Indigo"> </span>
+					<span class="l-c c-pu" style="background:#461B7E" title="Purple Monster"> </span>
+					<span class="l-c c-pu" style="background:#4e387e" title="Purple Haze"> </span>
+					<span class="l-c c-pu" style="background:#614051" title="Eggplant"> </span>
+					<span class="l-c c-pu" style="background:#5e5a80" title="Grape"> </span>
+					<span class="l-c c-pu" style="background:#6a287e" title="Purple Jam"> </span>
+					<span class="l-c c-pu" style="background:#7d1b7e" title="Dark Orchid"> </span>
+					<span class="l-c c-pu" style="background:#A74AC7" title="Purple Flower"> </span>
+					<span class="l-c c-pu" style="background:#b048b5" title="Medium Orchid"> </span>
+					<span class="l-c c-pu" style="background:#6c2dc7" title="Purple Amethyst"> </span>
+					<span class="l-c c-pu" style="background:#842dce" title="Dark Violet"> </span>
+					<span class="l-c c-pu" style="background:#8d38c9" title="Violet"> </span>
+					<span class="l-c c-pu" style="background:#7a5dc7" title="Purple Sage Bush"> </span>
+					<span class="l-c c-pu" style="background:#7f38ec" title="Lovely Purple"> </span>
+					<span class="l-c c-pu" style="background:#8e35ef" title="Purple"> </span>
+					<span class="l-c c-pu" style="background:#893bff" title="Aztech Purple"> </span>
+					<span class="l-c c-pu" style="background:#8467d7" title="Medium Purple"> </span>
+					<span class="l-c c-pu" style="background:#A23bec" title="Jasmine Purple"> </span>
+					<span class="l-c c-pu" style="background:#b041ff" title="Purple Daffodil"> </span>
+					<span class="l-c c-pu" style="background:#c45aec" title="Tyrian Purple"> </span>
+					<span class="l-c c-pu" style="background:#9172ec" title="Crocus Purple"> </span>
+					<span class="l-c c-pu" style="background:#9e7bff" title="Purple Mimosa"> </span>
+					<span class="l-c c-pu" style="background:#d462ff" title="Heliotrope Purple"> </span>
+					<span class="l-c c-pu" style="background:#e238ec" title="Crimson"> </span>
+					<span class="l-c c-pu" style="background:#c38ec7" title="Purple Dragon"> </span>
+					<span class="l-c c-pu" style="background:#C8A2C8" title="Lilac"> </span>
+					<span class="l-c c-pu" style="background:#e6a9ec" title="Blush Pink"> </span>
+					<span class="l-c c-pu" style="background:#E0B0FF" title="Mauve"> </span>
+					<span class="l-c c-pu" style="background:#c6aec7" title="Wisteria Purple"> </span>
+					<span class="l-c c-pu" style="background:#f9b7ff" title="Blossom Pink"> </span>
+					<span class="l-c c-pu" style="background:#D2B9D3" title="Thistle"> </span>
+					<span class="l-c c-pu" style="background:#d9cfec" title="Periwinkle"> </span>
+					<span class="l-c c-pu" style="background:#ebdde2" title="Lavender Pinocchio"> </span>
+					<span class="l-c c-pu" style="background:#e3e4fa" title="Lavender blue"> </span>
+					</p>
+					<p><label><input type='checkbox' name='ignore-device'>Ignore/hide this device</label></p>
+					<p class="a-c">
+						<button type="button" id="ed-update">Update</button>
+						<button type="button" id="ed-clear">Clear</button>
+						<button type="button" class="ed-close">Close</button>
+					</p>
+				</div>
+				<div id='settings' class='hidden p-a dlog'>
+					<h3 class='s-export'>Export Settings<span class="dlog-close btn p-a" title="Click to close this dialog"></span></h3>
+					<p class='s-export'>All of the settings,etc. for this web app are retained in localStorage (meaning that they are private to this browser on this computer).  This is my quick & dirty method (emphasis on the latter) for copying your settings to different browser or device.</p>
+					<p class='s-export'>Copy the text from the field below to a file on a USB stick or email it to yourself and then open the `Settings` tab on the other machine (or browser) and click `Import`.</p>
+
+					<h3 class='s-import'>Import Settings<span class="dlog-close btn p-a" title="Click to close this dialog"></span></h3>
+					<p class='s-import'>Paste the settings you exported previously into the field below and then click `Import`.</p>
+					<p class='s-import'><b>NOTE</b> - this will replace all similarly named variables within the localStorage for this browser on this machine.  <i>It cannot be undone!</i>  I strongly recommend that you first export the settings from this machine... just in case!</p>
+					<textarea class='s-import s-export'></textarea>
+					<h3 class='s-isp'>Import <span class="isp-name">ISP</span> Data<span class="dlog-close btn p-a" title="Click to close this dialog"></span></h3>
+					<p class='s-isp'>Paste the data from your <span class="isp-name">ISP</span>'s usage table into the field below [<a class='isp-url' target='_blank'><span class="isp-name">ISP</span> link</a>] and then click `Process`.  Otherwise, click `Close` to dismiss this dialog.</p>
+					<textarea id='isp-in' class='s-isp' placeholder='Paste your ISP data here and then click `Process`'></textarea>
+					<textarea class='hidden' id='isp-out' placeholder='The processed results will appear here (for debug purposes only)'></textarea>
+					<p id='isp-import-results' class='hidden'></p>
+					<p class='s-isp s-import s-export a-c'>
+						<button class='s-import btn' onclick=import_settings()>Import</button>
+						<button class='s-isp btn' id='process-isp'>Process</button>
+						<button class='s-isp s-import s-export btn' onclick=close_settings()>Close</button></p>
+				</div>
+
+
+			</section> <!-- end of main-body -->
+
+		</div>
+		<footer>Yet Another Monitor (YAMon) - Al Caughey &copy; 2013-present, All rights reserved.<a class='a-r' href='https://usage-monitoring.com/privacy.php' target='_blank'>Privacy Policy</a></footer>
+	</body>
+</html>
