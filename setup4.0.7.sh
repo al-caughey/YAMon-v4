@@ -10,7 +10,7 @@
 ##########################################################################
 
 # History
-# 2020-01-26: 4.0.7 - fixed startup & shutdown code for Tomato (thx tvlz); added CopyDataFiles() to properly copy/rename old data files
+# 2020-01-26: 4.0.7 - fixed startup & shutdown code for Tomato (thx tvlz); added CopyDataFiles() to properly copy/rename old data files; added prompt for `_purgeOldFiles` (advanced only)
 # 2020-01-03: 4.0.6 - check copied users.js to ensure that entry for users_updated exists; check nvram modelNumber too to get device name
 # 2019-12-23: 4.0.5 - added prompt to run fixes; correctly added _firmware, etc to config.file (if missing)
 # 2019-11-09: 4.0.2 - improvements for upgrading from v3
