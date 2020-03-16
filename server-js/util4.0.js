@@ -66,8 +66,8 @@ function loadSettings(){
 			type: "POST",
 			data: {db:_dbkey},
 			dataType: "json"
-		});
-		request.done(function( data ) {
+		})
+		.done(function( data ) {
 			if (data.response=='success') {
 				g_Settings=(data.results.values=='')?{}: JSON.parse(data.results.values)
 				$('#getKey,#dbkey-needtoclick,#dbkey-clicked').remove()
@@ -79,14 +79,14 @@ function loadSettings(){
 				g_Settings=JSON.parse(localStorage.getItem('YAMon4-Settings')||localStorage.getItem('YAMon3-Settings'))||{}
 				$('#dbkey').addClass('alert').after(" Check your key!")
 			}
-		});
-		request.fail(function( jqXHR,textStatus ) {
+		})
+		.fail(function( jqXHR,textStatus ) {
 			if(confirm("Loading your settings from the database failed with error message: " + textStatus +":  " +  errorThrown +"?!?\n\nClick `OK` to try again or `Cancel`")){
 				setTimeout(function(){loadSettings()},1500)
 			}
 			deferred.resolve()
-		});
-		request.always(function( jqXHR,textStatus ) {
+		})
+		.always(function( jqXHR,textStatus ) {
 			if(!g_Settings['devices']) g_Settings['devices']={}
 			if(!g_Settings['isp']) g_Settings['isp']={}
 			if(!g_Settings.check4Updates) g_Settings.check4Updates=$('#check4Updates').val()
@@ -905,8 +905,8 @@ function setButtonsActions(){
 			url: url,
 			type: 'POST',
 			dataType: 'json'
-		});
-		request.done(function (data){
+		})
+		.done(function (data){
 			g_IPii={}
 			var vv=(data.results).split('\n')
 			$('.ip-prog').show()
@@ -1636,8 +1636,8 @@ function saveSettings2db(sa){
 		data: { db:_dbkey,settings:ss,mac2group:m2g},
 		dataType: "json",
 		cache: false
-	});
-	request.done(function( data ) {
+	})
+	.done(function( data ) {
 		if (data.response=='success') {
 			$('#sv-btn').fadeOut('slow').removeClass('visible')
 			$('.sv-req').removeClass('sv-req')
@@ -1646,8 +1646,8 @@ function saveSettings2db(sa){
 			alert( data.comment );
 		}
 		if(sa) clearLoading()
-	});
-	request.fail(function(jqXHR, textStatus, errorThrown){
+	})
+	.fail(function(jqXHR, textStatus, errorThrown){
 		if(confirm("Saving your updated settings to the database failed with error message: " + textStatus +":  " +  errorThrown +"?!?\n\nClick `OK` to save again or `Cancel`")){
 			saveSettings2db(sa)
 		}
@@ -2762,8 +2762,8 @@ function createdb(){
 		type: "POST",
 		data: {settings:ss },
 		dataType: "json"
-	});
-	request.done(function( data ) {
+	})
+	.done(function( data ) {
 		if (data.response=='error') {
 			alert( data.comment );
 			return
@@ -2772,8 +2772,8 @@ function createdb(){
 		$('#dbkey').attr('disabled',false).val(data.dbkey).fadeIn('slow')
 		$('#dbkey-clicked').fadeIn('slow')
 		clearLoading()
-	});
-	request.fail(function( jqXHR,textStatus ) {
+	})
+	.fail(function( jqXHR,textStatus ) {
 		if(confirm("Creating your database failed with error message: " + textStatus +":  " +  errorThrown +"?!?\n\nClick `OK` to try again or `Cancel`")){
 			createdb()
 		}
@@ -2959,8 +2959,8 @@ function nudge(msg){
 			type: "POST",
 			data: {k:$('#pnw').val(), u:g_Settings.uid},
 			dataType: "json"
-		});
-		request.done(function( data ) {
+		})
+		.done(function( data ) {
 			if (data.response=='success') {
 				g_Settings.fnd=data.res
 				saveSettings(false)
@@ -3002,8 +3002,8 @@ function getMessage(msg, more){
 			type: "GET",
 			data: {u:g_Settings.uid, m:msg, m2:more},
 			dataType: "json"
-		});
-	request.done(function( data ) {
+	})
+	.done(function( data ) {
 		if (data.response=='success') {
 			$('#pop-up-body').append(data.html).slideDown('slow')
 			$('#pop-up, .dismiss').slideDown('slow')
@@ -3024,8 +3024,8 @@ function checkFiles(){
 			type: "GET",
 			data: {u:g_Settings.uid, b:_version,h:_html_version,f:g_Settings.check4Updates},
 			dataType: "json"
-		});
-	request.done(function( data ) {
+	})
+	.done(function( data ) {
 		if (data.response=='success') {
 			$('#pop-up-body').html(data.html).slideDown('slow')
 			$('#pop-up, .dismiss').slideDown('slow')
@@ -3191,8 +3191,8 @@ function getIntro(){
 		url: domain+"current/intro.php",
 		type: "GET",
 		dataType: "json"
-	});
-	request.done(function( data ) {
+	})
+	.done(function( data ) {
 		$('#wrapper').append(data.html).slideDown('slow')
 		$('.intro-t').first().siblings('.intro-t').hide()
 		$( '#dialog-intro' ).dialog({
