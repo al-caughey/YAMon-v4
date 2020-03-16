@@ -446,6 +446,14 @@ if [ "$_unlimited_usage" == "1" ] ; then
 	Prompt '_unlimited_end' 'End time?' 'Enter the time in [hh:mm] 24hr format' '' "^(00|[1-9]|1[0-9]|2[0-3]):[0-5][0-9]$" '_unlimited_usage'
 fi
 
+if [ "$t_installmode" == 'b' ] ; then
+	_purgeOldFiles=1
+else
+	Prompt '_purgeOldFiles' 'Do you want to purge old logs and backups at the end of your billing interval?
+If yes, files more than 30 days old will be removed from your USB drive.
+*** NB - This will *NOT* remove data files!' "$yn_y" '1' $zo_r '_purgeOldFiles'
+fi
+
 [ -n "$_canClear" ] && clear
 
 if [ -z "$_dbkey" ] ; then
