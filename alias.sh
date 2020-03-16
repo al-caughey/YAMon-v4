@@ -15,6 +15,8 @@
 #
 ##########################################################################
 d_baseDir=$(cd "$(dirname "$0")" && pwd)
+[ "$d_baseDir" == '/root' ] && d_baseDir='/opt/YAMon4'
+
 alias clearlog='> /tmp/yamon/yamon.log'
 alias comp='${d_baseDir}/compare.sh'
 alias copylog='${d_baseDir}/copy-log.sh'
@@ -107,7 +109,8 @@ Currently defined groups: "
 	iptables -L YAMONv40_$1 | grep -v "^target"
 	
 }
-echo '************************************************
+echo "************************************************
 ************* Bash Aliases loaded **************
-************************************************
-'
+************************************************ 
+
+"
