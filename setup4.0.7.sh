@@ -119,7 +119,8 @@ CheckDataPath(){
 	path2data=${path2data%/}
 	if [ ! -d "$path2data" ] ; then
 		SetupLog "CheckDataPath: $path2data does not exist" 1
-		oldDataDir=$(find $(dirname "$d_baseDir") -type d -name "YAMon*" | grep -n '')
+		#oldDataDir=$(find $(dirname "$d_baseDir") -type d -name "YAMon*" | grep -n '')
+		oldDataDir=$(find $(dirname "$d_baseDir") -name "YAMon*" | grep -n '') #error -type d not supported by Tomato.
 		echo -e "\nCreating your data directory --> '$path2data'"
 		if [ -z "$oldDataDir" ] ; then
 			SetupLog "CheckDataPath: No prior install... adding an empty folder" 1
@@ -625,9 +626,9 @@ boot() {
 	else
 		SetupLog "Did not create start/stop entries in $etc_init?!?" 2
 	fi
-elif [ "$_firmware" == "3" ] || [ "$_firmware" == "2" ] || [ "$_firmware" -eq "5" ]; then # Tomato, AsusMerlin & variants 
+elif [ "$_firmware" == "2" ] || [ "$_firmware" == "3" ] || [ "$_firmware" -eq "5" ]; then # Tomato, AsusMerlin & variants 
+
 	cnsu=$(nvram get script_usbmount)
-	cnsd=$(nvram get script_usbumount)
 	if [ -n "$cnsu" ] && [ -n "$(echo $cnsu | grep "$su")" ] ; then
 		SetupLog "Startup - $su already exists in \`nvram-->script_usbmount\`" 2
 	elif [ -z "$cnsu" ] && [ -z "$(echo $cnsu | grep "$su")" ] ; then
@@ -636,11 +637,25 @@ elif [ "$_firmware" == "3" ] || [ "$_firmware" == "2" ] || [ "$_firmware" -eq "5
 		nvram set script_usbmount="$cnsu
 sleep $startup_delay
 $su"
-		nvram commit
+
 	else
-		SetupLog "Did not create start/stop entries in nvram?!?" 2
+		SetupLog "Did not create start entries in nvram?!?" 2
 	fi
+
+	cnsd=$(nvram get script_usbumount)
+	if [ -n "$cnsd" ] && [ -n "$(echo $cnsd | grep "$sd")" ] ; then
+		SetupLog "Shutdown - $sd already exists in \`nvram-->script_usbumount\`" 2
+	elif [ -z "$cnsd" ] && [ -z "$(echo $cnsd | grep "$sd")" ] ; then
+		SetupLog "Added $sd to nvram-->script_usbumount" 2
+		nvram set script_usbumount="$cnsd
+$sd"
+ 	else
+		SetupLog "Did not create stop entries in nvram?!?" 2
+ 	fi
+	nvram commit
+	
 elif [ "$_firmware" == "6" ] || [ "$_firmware" == "7" ] ; then
+
 	etc_rc="/etc/rc.local"
 	if [ -f "$etc_rc" ] && [ -n "$(cat "$etc_rc" | grep -e "$su" )" ] ; then
 		SetupLog "Startup - $su already exists in \`$etc_rc\`" 2
@@ -651,16 +666,7 @@ elif [ "$_firmware" == "6" ] || [ "$_firmware" == "7" ] ; then
 	else
 		SetupLog "Did not create start/stop entries in $etc_rc?!?" 2
 	fi
-	if [ -n "$cnsd" ] && [ -n "$(echo $cnsd | grep "$sd")" ] ; then
-		SetupLog "Shutdown - $sd already exists in \`nvram-->script_usbumount\`" 2
-	elif [ -z "$cnsd" ] && [ -z "$(echo $cnsd | grep "$sd")" ] ; then
-		SetupLog "Added $sd to nvram-->script_usbumount" 2
-		nvram set script_usbumount="$cnsd
-$sd"
-		nvram commit
- 	else
-		SetupLog "Did not create stop entries in nvram?!?" 2
- 	fi
+
 else
 
 	cnsu=$(nvram get rc_startup)
