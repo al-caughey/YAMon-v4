@@ -8,6 +8,7 @@
 # History
 # 2020-01-26: 4.0.7 - added static leases for Tomato (thx tvlz)
 #                   - added wait option ( -w -W1) to commands that add entries in iptables
+#                   - combined StaticLeases_Merlin & StaticLeases_Tomato into StaticLeases_Merlin_Tomato
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - changed loglevel of start messages in logs
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -221,10 +222,16 @@ GetDeviceName(){
 		Send2Log "StaticLeases_OpenWRT: result=$result " 0
 		echo "$result"
 	}
-	StaticLeases_Merlin(){
+	StaticLeases_Merlin_Tomato(){
 		local mac="$1"
-		#thanks to Chris Dougherty for providing this code
-		local nvr=$(nvram show 2>&1 | grep -i "dhcp_staticlist=")
+		if [ "$_firmware" -eq "3" ] ; then
+			local dhcp_str='dhcpd_static'
+		else
+			local dhcp_str='dhcp_staticlist'
+		fi
+		#thanks to Chris Dougherty for providing Merlin code, and
+		#to Tvlz for providing Tomato Nvram settings
+		local nvr=$(nvram show 2>&1 | grep -i "${dhcp_str}=")
 		local nvrt=$nvr
 		local nvrfix=''
 		while [ "$nvrt" ] ;do
@@ -236,27 +243,10 @@ GetDeviceName(){
 		done
 		nvr=${nvrfix//>/=}
 		local result=$(echo "$nvr" | grep -io "$mac[^=]*=.\{1,\}=.\{1,\}=" | cut -d= -f3)
-		Send2Log "StaticLeases_Merlin: result=$result " 0
+		Send2Log "StaticLeases_Merlin_Tomato: result=$result " 0
 		echo "$result"
 	}
-	StaticLeases_Tomato(){
-		local mac="$1"
-		#thanks to Tvlz for providing Tomato Nvram settings
-		local nvr=$(nvram show 2>&1 | grep -i "dhcpd_static=")
-		local nvrt=$nvr
-		local nvrfix=''
-		while [ "$nvrt" ] ;do
-			iter=${nvrt%%<*}
-			nvrfix="$nvrfix$iter="
-			[ "$nvrt" = "$iter" ] && \
-				nvrt='' || \
-				nvrt="${nvrt#*<}"
-		done
-		nvr=${nvrfix//>/=}
-		local result=$(echo "$nvr" | grep -io "$mac[^=]*=.\{1,\}=.\{1,\}=" | cut -d= -f3)
-		Send2Log "StaticLeases_Tomato: result=$result " 0
-		echo "$result"
-	}
+	
 	Send2Log "GetDeviceName: $1 $2" 0
 	#check first in static leases
 	local dn=`$nameFromStaticLeases "$mac"`
@@ -471,7 +461,8 @@ DigitAdd()
 }
 CheckIntervalFiles(){
 # create the data directory
-	[ -f "$_intervalDataFile" ] && return
+	[ -f "$_intervalDataFile" ] && Send2Log "CheckIntervalFiles: interval file exists: $_intervalDataFile" 1 && return
+
 	if [ ! -d "$_path2CurrentMonth" ] ; then
 		mkdir -p "$_path2CurrentMonth"
 		Send2Log "CheckIntervalFiles: create directory: $_path2CurrentMonth" 1
