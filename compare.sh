@@ -8,7 +8,7 @@
 # compares files on the router with those at https://usage-monitoring.com
 # run: manually and by install
 # History
-# 2020-01-26: 4.0.7 - no changes
+# 2020-01-26: 4.0.7 - auto-change windows linefeeds to unix
 # 2020-01-03: 4.0.6 - removed the sleep statements; updated formatting of output; strip latest history comment to improve matches
 # 2019-12-23: 4.0.5 - no changes
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -39,8 +39,10 @@ getlatest()
 	fi
 	if [ -f "$dst" ] ; then
 		echo "   --> downloaded to $dst"
+		sed -i -e 's/\r$//' "$dst" #change windows linefeeds to unix
 		local ext=$(echo -n "$dst" | tail -c 2)
 		[ "$ext" == 'sh' ] && chmod 770 "$dst"
+		
 	else
 		echo "   --> download failed?!?"
 	fi
@@ -132,7 +134,7 @@ do
 		echo "?!? not on server"
 		continue
 	elif [ ! -f "$path" ] && [ ! "$smd5" == "-" ] ; then
-		echo "+++ missing ***"
+		echo "+++  missing  +++ "
 	elif [ "$smd5" == "$lmd5w" ] ; then
 		echo "    identical"
 		continue
@@ -140,7 +142,7 @@ do
 		echo "--> matches but missing $_version comment"
 		continue
 	else
-		echo "*** differs ($lmd5w)"
+		echo "***  differs  ***"
 	fi
 	allMatch=1
 	[ "$_sync" == "1" ] && getlatest "$fn" && needsRestart=1

@@ -10,7 +10,7 @@
 # run: /opt/YAMon4/setPaths.sh
 # History
 # 2020-01-26: 4.0.7 - removed routerfile entry from paths (as no longer used); added defensive default when checking if IPv6 is enabled
-#                   - added another check for ipv6Enabled & static leases for Tomato (thx tvlz)
+#                   - added another check for ipv6Enabled & static leases for Tomato (thx tvlz); combined AsusMerlin & Tomato entries
 # 2020-01-26: 4.0.6 - added {xxx:-_} defaults in a number of spots
 # 2019-12-23: 4.0.5 - no changes
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -184,35 +184,19 @@ echo -e "\n#Firmware specfic & dependent entries:" >> "${pathsFile}"
 		hip6=$( uci show ddns.myddns_ipv6.use_ipv6 | cut -d'=' -f2 | sed -e "s~'~~g")
 		[ "${hip6:-0}" -eq '1' ] && ipv6Enabled=1
 	
-	elif [ "$_firmware" -eq "3" ]; then #Tomato
-		AddEntry 'nameFromStaticLeases' "StaticLeases_Tomato"
-		AddEntry 'deviceNameField' '3'
+	elif [ "$_firmware" -eq "2" ] || [ "$_firmware" -eq "3" ] || [ "$_firmware" -eq "5" ] ; then #AsusMerlin, Tomato & variants
+		AddEntry 'nameFromStaticLeases' "StaticLeases_Merlin_Tomato"
 		AddEntry 'deviceIPField' '2'
+		AddEntry 'deviceNameField' '3'
 		AddEntry '_dnsmasq_conf' "/tmp/etc/dnsmasq.conf"
 		AddEntry '_dnsmasq_leases' "/tmp/var/lib/misc/dnsmasq.leases"
 		AddEntry "_wwwPath" "${_wwwPath:-/tmp/var/wwwext/}"
 		AddEntry "_wwwURL" '/user'
-		_lan_iface='br-0'
-		
-		hip6=$(nvram get ipv6_enable)
-		[ "${hip6:-0}" -eq '1' ] && ipv6Enabled=1
+		_lan_iface='br0'
+
 		hse6=$(nvram get ipv6_service):-disabled
 		[ "${hse6:-disabled}" != 'disabled' ] && ipv6Enabled=1
 
-	elif [ "$_firmware" -eq "2" ] || [ "$_firmware" -eq "5" ] ; then #AsusMerlin & variants
-		AddEntry 'nameFromStaticLeases' "StaticLeases_Merlin"
-		AddEntry 'deviceNameField' '2'
-		AddEntry 'deviceIPField' '3'
-		AddEntry '_dnsmasq_conf' "/tmp/etc/dnsmasq.conf"
-		AddEntry '_dnsmasq_leases' "/tmp/var/lib/misc/dnsmasq.leases"
-		AddEntry "_wwwPath" "${_wwwPath:-/tmp/var/wwwext/}"
-		AddEntry "_wwwURL" '/user'
-		_lan_iface='br-0'
-		
-		hip6=$(nvram get ipv6_enable)
-		[ "${hip6:-0}" -eq '1' ] && ipv6Enabled=1
-		hse6=$(nvram get ipv6_service):-disabled
-		[ "${hse6:-disabled}" != 'disabled' ] && ipv6Enabled=1
 	else #otherwise... should never get to this
 		AddEntry 'nameFromStaticLeases' "NullFunction"
 		AddEntry '_dnsmasq_conf' "/tmp/etc/dnsmasq.conf"
