@@ -9,6 +9,7 @@
 # run: by cron
 # History
 # 2020-01-26: 4.0.7 - added check for error in Check4UpdatesInReports results
+#                   - moved GetDeviceGroup to shared.sh
 # 2020-01-03: 4.0.6 - only check dmesg if _logNoMatchingMac==1
 # 2019-12-23: 4.0.5 - no changes (yet)
 # 2019-11-24: 4.0.4 - added Check4UpdatesInReports to sync group names with reports
@@ -31,19 +32,7 @@ ipResults=$($_IPCmd) # a hack for firmware variants which do not include the ful
 ipList=$(echo "$ipResults" | grep -Ev "(${excluding//,/|})" | awk '{ print $5,$1 }')
 #[ -n "$ipList" ] && Send2Log "Check4NewDevices: ipList: $(IndentList "$ipList")"
 
-GetDeviceGroup(){
-	
-	local dd=$(echo "$mgList" | grep "$1")
-	if [ -z "$dd" ] ; then
-		Send2Log "GetDeviceGroup - no matching entry for $1 in users.js... set to '$_defaultGroup' " 2  #to do...
-		echo "${_defaultGroup:-${_defaultOwner:-Unknown}}"
-		return
-	fi
-	local group=$(GetField "$dd" 'group')
-		
-	Send2Log "GetDeviceGroup - $1 / $2 --> $dd --> $group" 
-	echo "$group"	
-} 
+
 Check4NewDevices(){
 	
 	FindRefMAC(){
@@ -91,8 +80,21 @@ Check4NewDevices(){
 	# add the YAMon entries of dmesg into the logs to see where the unmatched data is coming from (and then clear dmesg)
 	[ "${_logNoMatchingMac:-0}" -eq "1" ] && local dmsg=$(dmesg -c | grep YAMon)
 	if [ -z "$newIPList" ] ; then
-		Send2Log "Check4NewDevices: no new devices"
-		
+		Send2Log "Check4NewDevices: no new devices... checking that all IP addresses exist in iptables"
+		local ipsFromARP=$(cat /proc/net/arp | grep "^[1-9]" | grep -Ev "(${excluding//,/|})" | awk '{ print $1 }' | sort)
+		local iptablesList=$(iptables -L YAMONv40 -vnx | awk '{ print $8 }' | grep -v '0.0.0.0' | sort | grep "^[1-9]" | tr "\n" '|')
+		iptablesList="${iptablesList%|}"
+		iptablesList="${iptablesList//|/$|}"
+		iptablesList="${iptablesList//\./\\.}"
+
+		unmatchedIPs=$(echo "$ipsFromARP" | grep -Ev "${iptablesList%|}")
+		for nip in $unmatchedIPs ; do
+			local mac=$(GetMACbyIP "$nip")
+			local groupName=$(GetDeviceGroup "$mac" "$nip")
+			Send2Log "Check4NewDevices: $nip ($mac / $groupName) is missing in iptables" 2
+			CheckIPTableEntry "$nip" "$groupName"
+		done
+				
 		[ -n "$dmsg" ] && Send2Log "Check4NewDevices: Found YAMon entries in dmesg" 2
 		IFS=$'\n'
 		for line in $dmsg
@@ -105,7 +107,6 @@ Check4NewDevices(){
 
 		IFS=$'\n'
 		local re_mac='([a-f0-9]{2}:){5}[a-f0-9]{2}'
-		local mgList=$(echo "$_currentUsers" | grep -e "^mac2group({.*})$")
 		for nd in $newIPList
 		do
 			[ -z "$nd" ] && return

@@ -8,7 +8,8 @@
 # Run - by cron jobs (update-reports & end-of-hour)
 #
 # History
-# 2020-01-26: 4.0.7 - no changes
+# 2020-01-26: 4.0.7 - moved GetMACbyIP to shared.sh; allowed RETURN in iptables results 
+#                   - check for missing entries in mac-ip file; fixed LOG vs RETURN for final entry in YAMONv40
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - minor tweak to loglevel of traffic at the end of the hour; 
 #                     removed brace brackets around memory in Totals
@@ -42,25 +43,6 @@ GetMemory(){
 	Send2Log "GetMemoryField: memory --> $freeMem,$availMem,$totMem"
 	echo "$freeMem,$availMem,$totMem"
 }
-GetMACbyIP(){
-	# first check arp
-	local mip=$(cat /proc/net/arp | grep "$1" | awk '{print $4}')
-	if [ -n "$mip" ] ; then
-		echo "$mip" 
-		return
-	fi
-	
-	# then check users.js
-	local dd=$(echo "$_currentUsers" | grep -e "^mac2ip({.*})$" | grep "$1")
-	if [ -z "$dd" ] ; then
-		Send2Log "GetMACbyIP - no matching entry for $1 in users.js $(IndentList $dd)" 2
-	else
-		local id=$(GetField "$dd" 'id')
-		local mac=$(echo "$id"| cut -d- -f1)
-		Send2Log "GetMACbyIP - $1 --> $id  --> $mac"
-		[ -n "$mac" ] && echo "$mac"
-	fi
-}
 
 GetInterfaceTraffic(){
 	#pnd=$(cat "/proc/net/dev" | egrep "${_interfaces//,/|}")
@@ -91,7 +73,7 @@ GetInterfaceTraffic(){
 GetTraffic(){
 
 	IP6Enabled(){
-		echo "$(ip6tables -L "$YAMON_IPTABLES" "$vnx" | grep -v RETURN | awk '{ print $2,$7,$8 }' | grep "^[1-9]")"
+		echo "$(ip6tables -L "$YAMON_IPTABLES" "$vnx" | awk '{ print $2,$7,$8 }' | grep "^[1-9]")"
 	}
 	NoIP6(){
 		echo ''
@@ -104,7 +86,7 @@ GetTraffic(){
 	
 	local macIPList=$(cat "$macIPFile")
 	
-	local ip4t=$(iptables -L "$YAMON_IPTABLES" "$vnx" | grep -v RETURN | awk '{ print $2,$8,$9 }' | grep "^[1-9]")
+	local ip4t=$(iptables -L "$YAMON_IPTABLES" "$vnx" | awk '{ print $2,$8,$9 }' | grep "^[1-9]")
 	local ip6t="$ip6tablesFn"
 	
 	[ -z "$ip4t" ] && Send2Log "GetTraffic - No IPv4 traffic"
@@ -144,21 +126,38 @@ GetTraffic(){
 			${d_baseDir}/check-network.sh
 			UpdateLastSeen "${_generic_mac}-${ip}" "$tls"
 			local do=$(echo "$ipt" | cut -d' ' -f1)
-			total_down=$(( $total_down + ${do:-0} ))
+			Send2Log "GetTraffic: down: $do / $total_down " 1
+			total_down=$(( $total_down + ${do:-0} )) #assuming total_up is zero because all traffic goes to a single iptable rule
 			local newLine="hourlyData4({ \"id\":\"$_generic_mac-$ip\", \"hour\":\"$hr\", \"traffic\":\"${do:-0},0,$(( ${do:-0} * $currentlyUnlimited )),0\" })"
 			intervalTraffic="$intervalTraffic\n$newLine"
 			
-			#delete the log entry to reset the totals to zero 
-			wo=$(iptables -L YAMONv40 -n --line-numbers | grep LOG | awk '{ print $1 }')
-			iptables -D YAMONv40 "$wo"
-			iptables -A "$YAMON_IPTABLES" -j LOG --log-prefix "YAMon: "
-			Send2Log "GetTraffic: re-zeroed LOG rule in $YAMON_IPTABLES (entry #$wo)" 2
+			#delete the final RETURN/LOG entry in YAMONv40 to reset the totals to zero 
+			local wl=$(iptables -L "$YAMON_IPTABLES" -n --line-numbers | grep LOG | awk '{ print $1 }')
+			[ -n "$wl" ] && iptables -D "$YAMON_IPTABLES" "$wl"
+			wr=$(iptables -L "$YAMON_IPTABLES" -n --line-numbers | grep RETURN | awk '{ print $1 }')
+			[ -n "$wr" ] && iptables -D "$YAMON_IPTABLES" "$wr"
 			
-			ipt=$(echo -e "$ipt" | grep -v "$fl")
+			if [ "$_logNoMatchingMac" -eq "1" ] ; then
+				iptables -A "$YAMON_IPTABLES" -j LOG --log-prefix "YAMon: "
+				Send2Log "GetTraffic: re-zeroed LOG rule in $YAMON_IPTABLES (entry #$wo)" 2
+			else
+				iptables -A "$YAMON_IPTABLES" -j RETURN
+				Send2Log "GetTraffic: re-zeroed RETURN rule in $YAMON_IPTABLES (entry #$wo)" 2
+			fi
+			
+			ipt=$(echo -e "$ipt" | grep -v "$fl") #delete just the first entry from the list of IPs
 		else
 			local mac=$(echo "$macIPList" | grep "$tip" | cut -d' ' -f1)
-			[ -z "$mac" ] && mac=$(GetMACbyIP "$tip")
-			
+			if [ -z "$mac" ] ; then
+				mac=$(GetMACbyIP "$ip")
+				Send2Log "GetTraffic: no matching entry for $fl.  Appending \`$mac $ip\` to macIPFile" 2
+				echo -e "$mac $ip" >> "$macIPFile"
+				Send2Log "GetTraffic: Checking users.js for \`$mac $ip\`" 1
+				CheckMAC2IPinUserJS "$mac" "$ip"
+				CheckIPTableEntry "$i"
+				CheckMAC2GroupinUserJS "$mac" ""
+			fi
+
 			if [ -n "$mac" ] ; then
 				local do=$(echo "$ipt" | grep -E "($_generic_ipv4|$_generic_ipv6) $tip\b" | cut -d' ' -f1)
 				local up=$(echo "$ipt" | grep -E "$tip ($_generic_ipv4|$_generic_ipv6)" | cut -d' ' -f1)
@@ -171,7 +170,7 @@ GetTraffic(){
 			else
 				Send2Log "GetTraffic: still no matching mac for '$ip'?!? skipping this entry$(IndentList "$fl")" 3
 			fi
-			ipt=$(echo -e "$ipt" | grep -v "$tip")
+			ipt=$(echo -e "$ipt" | grep -v "$tip") #delete all matching entries for the current IP
 		fi
 	done
 	intervalTraffic=$(echo -e "$intervalTraffic" | grep -e "^hourlyData4({ .* })$")

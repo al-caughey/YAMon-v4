@@ -9,6 +9,9 @@
   > 2020-01-26: 4.0.7
     + a number of changes in various files to better support Tomato (thx to tvlz for this)
 	+ fixed users_created error
+	+ added prompt in setup for `_purgeOldFiles`
+	+ minor tweaks in aliases.sh
+	+ fixed issue with new devices not getting added to users.js
   > 2020-01-26: 4.0.6
     + get acRules based upon firmware (in end-of-hour)
 	+ added logging to WriteConfigFile; changed logic to create js directory in SetWebDirectories (in start)

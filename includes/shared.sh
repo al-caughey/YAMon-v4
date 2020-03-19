@@ -9,6 +9,7 @@
 # 2020-01-26: 4.0.7 - added static leases for Tomato (thx tvlz)
 #                   - added wait option ( -w -W1) to commands that add entries in iptables
 #                   - combined StaticLeases_Merlin & StaticLeases_Tomato into StaticLeases_Merlin_Tomato
+#                   - added GetMACbyIP & GetDeviceGroup (from traffic & check-network)
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - changed loglevel of start messages in logs
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -92,6 +93,43 @@ CheckGroupChain(){
 		$cmd -A "$groupChain" -j "RETURN" -w -W1
 	fi
 }
+GetMACbyIP(){
+	# first check arp
+	local ip="$1"
+	local tip="\b${ip//\./\\.}\b"
+
+	local mip=$(cat /proc/net/arp | grep "$tip" | awk '{print $4}')
+	if [ -n "$mip" ] ; then
+		echo "$mip" 
+		return
+	fi
+	
+	# then check users.js
+	local dd=$(echo "$_currentUsers" | grep -e "^mac2ip({.*})$" | grep "$tip")
+	if [ -z "$dd" ] ; then
+		Send2Log "GetMACbyIP - no matching entry for $ip in users.js $(IndentList $dd)" 2
+	else
+		local id=$(GetField "$dd" 'id')
+		local mac=$(echo "$id"| cut -d- -f1)
+		Send2Log "GetMACbyIP - $ip --> $id  --> $mac"
+		[ -n "$mac" ] && echo "$mac"
+	fi
+}
+
+GetDeviceGroup(){
+	local mgList=$(echo "$_currentUsers" | grep -e "^mac2group({.*})$")
+	local dd=$(echo "$mgList" | grep "$1")
+	if [ -z "$dd" ] ; then
+		Send2Log "GetDeviceGroup - no matching entry for $1 in users.js... set to '$_defaultGroup' " 2  #to do...
+		echo "${_defaultGroup:-${_defaultOwner:-Unknown}}"
+		return
+	fi
+	local group=$(GetField "$dd" 'group')
+		
+	Send2Log "GetDeviceGroup - $1 / $2 --> $dd --> $group" 
+	echo "$group"	
+}
+ 
 CheckIPTableEntry(){
 
 	Send2Log "CheckIPTableEntry: $1 /  $2 " 0
@@ -380,14 +418,14 @@ CheckMAC2IPinUserJS(){
 			local dn=$(GetDeviceName "$m" "$i")
 			Send2Log "Otherwise..." 0
 		fi
-		Send2Log "AddNewMACIP: adding $newentry to $_usersFile" 0
 		local newentry="mac2ip({ \"id\":\"$m-$i\", \"name\":\"${dn:-New Device}\", \"active\":\"1\", \"added\":\"${_ds} ${_ts}\", \"updated\":\"\" })"
+		Send2Log "AddNewMACIP: adding $newentry to $_usersFile" 0
 		sed -i "s~//MAC -> IP~//MAC -> IP\n$newentry~g" "$_usersFile"
 		UpdateLastSeen "$m-$i" "$(date +"%T")"
 		UsersJSUpdated
 	}
-	local matchesMACIP=$(cat "$_usersFile" | grep -e "^mac2ip({.*})$" | grep "\"id\":\"$m-$i\"")
 	
+	local matchesMACIP=$(cat "$_usersFile" | grep -e "^mac2ip({.*})$" | grep "\"id\":\"$m-$i\"")
 	if [ -z "$matchesMACIP" ] ; then
 		AddNewMACIP
 	elif [ "$(echo $matchesMACIP | wc -l)" -eq 1 ] ; then
