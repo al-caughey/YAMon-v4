@@ -28,7 +28,6 @@ getlatest()
 		wget "$src" -U "YAMon-Setup" -qO "$dst"
 		rm='wget'
 	fi
-
 	if [ ! -f "$dst" ] ; then
 		[ "$err_num" -ge 3 ] && echo "
 ****************************
