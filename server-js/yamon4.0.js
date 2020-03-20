@@ -206,10 +206,10 @@ function loadMonthly(){
 		var _usageFileName='mac_usage.js'
 		var _hourlyFileName='hourly_data.js'
 		var dp=_wwwData+(_organizeData==0?'':(_organizeData==1?myr+'/':myr+'/'+mn+'/'))
-		var datafile=dp+myr+'-'+mn+'-'+(!da?'':(da+'-'))+_usageFileName
+		var mdatafile=dp+myr+'-'+mn+'-'+(!da?'':(da+'-'))+_usageFileName
 		var md = $.Deferred()
 		monthlyDataCap=null
-		$.getScript(datafile)
+		$.getScript(mdatafile)
 		
 		.done(function(dlist,textStatus){
 			if(dlist==''){
@@ -235,7 +235,7 @@ function loadMonthly(){
 				$('.spUsageCap').text(monthlyDataCap).addClass('GBytes')
 			}
 			flushChanges()
-			$('#MonthlyHeader .icon').attr('title', 'View the contents of the monthly usage data file').data('link', datafile)
+			$('#MonthlyHeader .icon').attr('title', 'View the contents of the monthly usage data file').data('link', mdatafile)
 			var cdown=0,cup=0
 			for(var d in corrections){
 				if(corrections[d]){
@@ -261,7 +261,7 @@ function loadMonthly(){
 				if (_cr_Date>=_re_Date) break
 			}
 			if(sa){
-				ShowAlert("<p>Your <a href='"+datafile+"' target='_blank'>monthly data</a> file is missing traffic at the start of the interval the following dates:"+dl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'missing-monthly')
+				ShowAlert("<p>Your <a href='"+mdatafile+"' target='_blank'>monthly data</a> file is missing traffic at the start of the interval the following dates:"+dl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'missing-monthly')
 				showLoading("The monthly data file has gaps?!?",'warning')
 			} 
 			var nn=_rs_Date, cd, gl=''
@@ -278,7 +278,7 @@ function loadMonthly(){
 				nn=newdate(nn,1)
 			}
 			if((dg) && (dl!=gl)){
-				ShowAlert("<p>Your <a href='"+datafile+"' target='_blank'>monthly data</a> file is missing traffic on the following dates:"+gl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'monthly-gaps')
+				ShowAlert("<p>Your <a href='"+mdatafile+"' target='_blank'>monthly data</a> file is missing traffic on the following dates:"+gl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'monthly-gaps')
 				showLoading("The monthly data file has gaps?!?",'warning')
 			} 
 			md.resolve()
@@ -437,9 +437,7 @@ function loadHourly(cleardata){
 				}
 				monthly[k].usage[dn].down+=hourly[k].down
 				monthly[k].usage[dn].up+=hourly[k].up
-				console.log(devices[k])
 				var gn=devices[k].cg
-			
 				if(!names[gn]){
 					var n=Object.keys(names).length
 					if(_unlimited_usage=='0'){
@@ -474,7 +472,8 @@ function loadHourly(cleardata){
 				}
 				tmv(k)
 			})
-			monthly_totals.pnd[dn]={down:pnd_data.total.down,up:pnd_data.total.up}
+			var o2u=!!interfaces['br0']?interfaces['br0']:interfaces['br-lan']
+			monthly_totals.pnd[dn]={down:o2u.down,up:o2u.up}
 			$('.hwncd').show()
 			var maxHr=today.getHours()
 		}
@@ -1124,10 +1123,11 @@ function setDailyTab(){
 	var arr=[[' .downloads',dtot],[' .uploads',utot],[' .ul-down',ul_dtot],[' .ul-up',ul_utot],[' .tByts',total]]
 	updateRow('.DailyFooter',arr)
 	$('thead .DailyFooter')[g_Settings['DupTotals']?'show':'hide']()
-	if(!pnd_data||!pnd_data.total){
+	var o2u=!!interfaces['br0']?interfaces['br0']:interfaces['br-lan']
+	if(!o2u){
 		$('#RouterFooter,#DiffFooter,#PercentFooter,#LocalFooter').hide()
 	}
-	else if(pnd_data.total.up==0&&pnd_data.total.down==0){
+	else if(o2u.up==0&&o2u.down==0){
 		$('#RouterFooter,#DiffFooter,#PercentFooter').hide()
 	}
 	else{
@@ -1135,14 +1135,14 @@ function setDailyTab(){
 		updateRow('#LocalFooter',arr)
 
 		$('#RouterFooter,#DiffFooter,#PercentFooter')[inc_rd?'show':'hide']()
-		arr=[[' .downloads',pnd_data.total.down],[' .uploads',pnd_data.total.up],[' .tByts',pnd_data.total.down+pnd_data.total.up]]
+		arr=[[' .downloads',o2u.down],[' .uploads',o2u.up],[' .tByts',o2u.down+o2u.up]]
 		updateRow('#RouterFooter',arr)
-		$('#RouterFooter .percent').text(((pnd_data.total.down+pnd_data.total.up)/total*100-100).toFixed(_dec))
-		arr=[[' .downloads',pnd_data.total.down-dtot],[' .uploads',pnd_data.total.up-utot],[' .tByts',pnd_data.total.down+pnd_data.total.up-total]]
+		$('#RouterFooter .percent').text(((o2u.down+o2u.up)/total*100-100).toFixed(_dec))
+		arr=[[' .downloads',o2u.down-dtot],[' .uploads',o2u.up-utot],[' .tByts',o2u.down+o2u.up-total]]
 		updateRow('#DiffFooter',arr)
-		$('#PercentFooter .downloads').text(((pnd_data.total.down-dtot)/dtot*100).toFixed(_dec))
-		$('#PercentFooter .uploads').text(((pnd_data.total.up-utot)/utot*100).toFixed(_dec))
-		$('#PercentFooter .tByts').text(((pnd_data.total.down+pnd_data.total.up-total)/total*100).toFixed(_dec))
+		$('#PercentFooter .downloads').text(((o2u.down-dtot)/dtot*100).toFixed(_dec))
+		$('#PercentFooter .uploads').text(((o2u.up-utot)/utot*100).toFixed(_dec))
+		$('#PercentFooter .tByts').text(((o2u.down+o2u.up-total)/total*100).toFixed(_dec))
 	}
 	$('#h_sd-dd,#h_sd-ddl, #submenu').remove()
 	$('#c-h_sd').append("<span id='submenu'><span id='h_fd-all' class='h_fd'>All</span><span id='h_fd-none' class='h_fd'>None</span></span>")
