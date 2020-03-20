@@ -167,6 +167,7 @@ echo -e "\n#Firmware specfic & dependent entries:" >> "${pathsFile}"
 		AddEntry "_wwwPath" "${_wwwPath:-/tmp/www/}"
 		AddEntry "_wwwURL" '/user'
 		_lan_iface='br-0'
+		AddEntry "_iptablesWait" ""
 		
 		hip6=$(nvram get ipv6_enable)
 		[ "${hip6:-0}" -eq '1' ] && ipv6Enabled=1
@@ -180,6 +181,7 @@ echo -e "\n#Firmware specfic & dependent entries:" >> "${pathsFile}"
 		AddEntry "_wwwPath" "${_wwwPath:-/tmp/www/}"
 		AddEntry "_wwwURL" '/yamon'
 		_lan_iface='br-lan'
+		AddEntry "_iptablesWait" '-w W1'
 		
 		hip6=$( uci show ddns.myddns_ipv6.use_ipv6 | cut -d'=' -f2 | sed -e "s~'~~g")
 		[ "${hip6:-0}" -eq '1' ] && ipv6Enabled=1
@@ -193,7 +195,8 @@ echo -e "\n#Firmware specfic & dependent entries:" >> "${pathsFile}"
 		AddEntry "_wwwPath" "${_wwwPath:-/tmp/var/wwwext/}"
 		AddEntry "_wwwURL" '/user'
 		_lan_iface='br0'
-
+		AddEntry "_iptablesWait" '-w W1'
+		
 		hse6=$(nvram get ipv6_service):-disabled
 		[ "${hse6:-disabled}" != 'disabled' ] && ipv6Enabled=1
 
@@ -206,6 +209,7 @@ echo -e "\n#Firmware specfic & dependent entries:" >> "${pathsFile}"
 		AddEntry "_wwwPath" "${_wwwPath:-/tmp/www/}"
 		AddEntry "_wwwURL" '/user'
 		_lan_iface='br-0'
+		AddEntry "_iptablesWait" ""
 	fi
 	AddEntry "_lan_iface" "$_lan_iface"
 	AddEntry "_interfaces" "$_lan_iface"

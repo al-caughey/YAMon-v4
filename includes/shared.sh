@@ -6,8 +6,9 @@
 # various utility functions (shared between one or more scripts)
 #
 # History
-# 2020-01-26: 4.0.7 - added static leases for Tomato (thx tvlz)
+# 2020-03-19: 4.0.7 - added static leases for Tomato (thx tvlz)
 #                   - added wait option ( -w -W1) to commands that add entries in iptables
+#                   - then added _iptablesWait 'cause not all firmware variants support iptables -w...
 #                   - combined StaticLeases_Merlin & StaticLeases_Tomato into StaticLeases_Merlin_Tomato
 #                   - added GetMACbyIP & GetDeviceGroup (from traffic & check-network)
 # 2020-01-03: 4.0.6 - no changes
@@ -89,8 +90,8 @@ CheckGroupChain(){
 	local groupChain="${YAMON_IPTABLES}_$(echo $groupName | sed "s~[^a-z0-9]~~ig")"
 	if [ -z "$($cmd -L | grep '^Chain' | grep "$groupChain\b")" ] ; then
 		Send2Log "CheckGroupChain: Adding group chain to iptables: $groupChain  " 2
-		$cmd -N "$groupChain" -w -W1
-		$cmd -A "$groupChain" -j "RETURN" -w -W1
+		eval $cmd -N "$groupChain" "$_iptablesWait"
+		eval $cmd -A "$groupChain" -j "RETURN" "$_iptablesWait"
 	fi
 }
 GetMACbyIP(){
@@ -157,7 +158,7 @@ CheckIPTableEntry(){
 			[ -z "$ip" ] && break
 			local dup_num=$($cmd -L "$YAMON_IPTABLES" -n --line-numbers | grep -m 1 -i "\b$ip\b" | cut -d' ' -f1)
 			[ -z "$dup_num" ] && break
-			$cmd -D "$YAMON_IPTABLES" $dup_num -w -W1
+			eval $cmd -D "$YAMON_IPTABLES" $dup_num "$_iptablesWait"
 			n=$(( $n + 1 ))
 		done
 		Send2Log "ClearDuplicateRules: removed $n duplicate entries for $ip" 0
@@ -166,13 +167,13 @@ CheckIPTableEntry(){
 		local groupChain="${YAMON_IPTABLES}_$(echo $groupName | sed "s~[^a-z0-9]~~ig")"
 		Send2Log "AddIP: $cmd $YAMON_IPTABLES $ip --> $groupChain (firmware: $_firmware)" 0
 		if [ "$_firmware" -eq "0" ] && [ "$cmd" == 'ip6tables' ] ; then
-			$cmd -I "$YAMON_IPTABLES" -j "RETURN" -s $ip -w -W1
-			$cmd -I "$YAMON_IPTABLES" -j "RETURN" -d $ip -w -W1
-			$cmd -I "$YAMON_IPTABLES" -j "$groupChain" -s $ip -w -W1
-			$cmd -I "$YAMON_IPTABLES" -j "$groupChain" -d $ip -w -W1
+			eval $cmd -I "$YAMON_IPTABLES" -j "RETURN" -s $ip "$_iptablesWait"
+			eval $cmd -I "$YAMON_IPTABLES" -j "RETURN" -d $ip "$_iptablesWait"
+			eval $cmd -I "$YAMON_IPTABLES" -j "$groupChain" -s $ip "$_iptablesWait"
+			eval $cmd -I "$YAMON_IPTABLES" -j "$groupChain" -d $ip "$_iptablesWait"
 		else
-			$cmd -I "$YAMON_IPTABLES" -g "$groupChain" -s $ip -w -W1
-			$cmd -I "$YAMON_IPTABLES" -g "$groupChain" -d $ip -w -W1
+			eval $cmd -I "$YAMON_IPTABLES" -g "$groupChain" -s $ip "$_iptablesWait"
+			eval $cmd -I "$YAMON_IPTABLES" -g "$groupChain" -d $ip "$_iptablesWait"
 			Send2Log "AddIP: $cmd -I "$YAMON_IPTABLES" -g "$groupChain" -s $ip"
 		fi
 	}
@@ -353,7 +354,7 @@ CheckMAC2GroupinUserJS(){
 			for rule in $matchingRules ; do
 				[ -z "$rule" ] && continue
 				local ln=$(echo $rule | awk '{print $1}')
-				$cmd -R ${YAMON_IPTABLES} $ln -j $groupChain -w -W1
+				eval $cmd -R ${YAMON_IPTABLES} $ln -j $groupChain "$_iptablesWait"
 				Send2Log "ChangeMACGroup: changing destination of $rule to $gn" 2
 			done
 		done

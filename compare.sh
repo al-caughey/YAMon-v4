@@ -134,7 +134,7 @@ do
 		echo "?!? not on server"
 		continue
 	elif [ ! -f "$path" ] && [ ! "$smd5" == "-" ] ; then
-		echo "+++  missing  +++ "
+		echo "+++  missing  +++"
 	elif [ "$smd5" == "$lmd5w" ] ; then
 		echo "    identical"
 		continue

@@ -15,7 +15,7 @@
 #
 ##########################################################################
 d_baseDir=$(cd "$(dirname "$0")" && pwd)
-[ "$d_baseDir" == '/root' ] && d_baseDir='/opt/YAMon4'
+[ -z "$(echo "$d_baseDir" | grep -i 'yamon')" ] && d_baseDir='/opt/YAMon4'
 
 alias clearlog='> /tmp/yamon/yamon.log'
 alias comp='${d_baseDir}/compare.sh'

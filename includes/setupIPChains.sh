@@ -6,7 +6,8 @@
 # functions to define chains in iptables & optionally ip6tables
 #
 # History
-# 2020-01-26: 4.0.7 - added wait option ( -w -W1) to commands that add entries in iptables
+# 2020-03-20: 4.0.7 - added wait option ( -w -W1) to commands that add entries in iptables; 
+#                   - then added _iptablesWait 'cause not all firmware variants support iptables -w...
 # 2020-01-03: 4.0.6 - added check for _logNoMatchingMac in SetupIPChains
 # 2019-12-23: 4.0.5 - no changes
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -31,7 +32,7 @@ SetupIPChains(){
 		Send2Log "CheckChain: $chain --> '$ce'" 
         if [ -z "$ce" ] ; then
             Send2Log "CheckChains: Adding $chain in $cmd" 2
-            $cmd -N $chain -w -W1
+            eval $cmd -N $chain "$_iptablesWait"
         else 
             Send2Log "CheckChain: $chain exists in $cmd" 1
         fi
@@ -47,7 +48,7 @@ SetupIPChains(){
 			return
 		elif [ "$foundRuleinChain" -eq "0" ]; then
 			Send2Log "CheckTables: Created '$cmd' rule $rule in chain $tbl" 2
-			eval $cmd -I "$tbl" -j "$rule" -w -W1
+			eval $cmd -I "$tbl" -j "$rule" "$_iptablesWait"
 			return
 		fi
 		
@@ -56,10 +57,10 @@ SetupIPChains(){
 		local i=1
 		while [  "$i" -le "$foundRuleinChain" ]; do
 			local dup_num=$($cmd -nL "$tbl" --line-numbers | grep -m 1 -i "\b$rule\b" | cut -d' ' -f1)
-			eval $cmd -D "$tbl" $dup_num -w -W1
+			eval $cmd -D "$tbl" $dup_num "$_iptablesWait"
 			i=$(($i+1))
 		done
-		eval $cmd -I "$tbl" -j "$rule" -w -W1
+		eval $cmd -I "$tbl" -j "$rule" "$_iptablesWait"
 	}
 	
     AddPrivateBlocks(){
@@ -73,15 +74,15 @@ SetupIPChains(){
             for iprd in $ip_blocks
             do
 				if [ "$_firmware" -eq "0" ] && [ "$cmd" == 'ip6tables' ] ; then
-					$cmd -I "$ent" -j "RETURN" -s $iprs -d $iprd -w -W1
-					$cmd -I "$ent" -j "$loc" -s $iprs -d $iprd -w -W1
+					eval $cmd -I "$ent" -j "RETURN" -s $iprs -d $iprd "$_iptablesWait"
+					eval $cmd -I "$ent" -j "$loc" -s $iprs -d $iprd "$_iptablesWait"
 				else
-					$cmd -I "$ent" -g "$loc" -s $iprs -d $iprd -w -W1
+					eval $cmd -I "$ent" -g "$loc" -s $iprs -d $iprd "$_iptablesWait"
 				fi
 			done
         done
-        $cmd -A "$ent" -j "${YAMON_IPTABLES}" -w -W1
-		$cmd -I "$loc" -j "RETURN" -w -W1
+        eval $cmd -A "$ent" -j "${YAMON_IPTABLES}" "$_iptablesWait"
+		eval $cmd -I "$loc" -j "RETURN" "$_iptablesWait"
 			
 		Send2Log "chains --> $cmd / $YAMON_IPTABLES --> $(IndentList "$($cmd -L -vx | grep $YAMON_IPTABLES | grep Chain)")"
     }
@@ -92,13 +93,13 @@ SetupIPChains(){
         for ip in $ip_addresses
         do
 			if [ "$_firmware" -eq "0" ] && [ "$cmd" == 'ip6tables' ] ; then
-				$cmd -I "$ent" -j "RETURN" -s $ip -w -W1
-				$cmd -I "$ent" -j "RETURN" -d $ip -w -W1
-				$cmd -I "$ent" -j "$loc" -s $ip -w -W1
-				$cmd -I "$ent" -j "$loc" -d $ip -w -W1
+				eval $cmd -I "$ent" -j "RETURN" -s $ip "$_iptablesWait"
+				eval $cmd -I "$ent" -j "RETURN" -d $ip "$_iptablesWait"
+				eval $cmd -I "$ent" -j "$loc" -s $ip "$_iptablesWait"
+				eval $cmd -I "$ent" -j "$loc" -d $ip "$_iptablesWait"
 			else
-				$cmd -I "$ent" -g "$loc" -s $ip -w -W1
-				$cmd -I "$ent" -g "$loc" -d $ip -w -W1
+				eval $cmd -I "$ent" -g "$loc" -s $ip "$_iptablesWait"
+				eval $cmd -I "$ent" -g "$loc" -d $ip "$_iptablesWait"
 			fi	
         done
     }
@@ -141,9 +142,9 @@ SetupIPChains(){
 		done
 		
 		if [ "${_logNoMatchingMac:-0}" -eq "1" ] ; then
-			$cmd -A "$YAMON_IPTABLES" -j LOG --log-prefix "YAMon: " -w -W1
+			eval $cmd -A "$YAMON_IPTABLES" -j LOG --log-prefix "YAMon: " "$_iptablesWait"
 		else
-			$cmd -A "$YAMON_IPTABLES" -j RETURN -w -W1
+			eval $cmd -A "$YAMON_IPTABLES" -j RETURN			
 		fi
 		
 	done
