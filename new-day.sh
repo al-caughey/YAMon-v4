@@ -8,6 +8,7 @@
 # run scripts needed at the start of a new day
 # run: by cron
 # History
+# 2020-03-20: 4.0.8 - remove legacy variables from hourlyDataFile header
 # 2020-01-26: 4.0.7 - no changes
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - added symlinks for day and hour logs 
@@ -21,10 +22,10 @@ source "${d_baseDir}/includes/shared.sh"
 ChangePath 'rawtraffic_day' "${_path2CurrentMonth}raw-traffic-$_ds.txt"
 hourlyDataFile="${tmplog}hourly_${_ds}.js"
 dailyLogFile="${_path2logs}${_ds}.html"
-ChangePath 'hourlyDataFile' "$hourlyDataFile"
 ChangePath 'dailyLogFile' "$dailyLogFile"
+ChangePath 'hourlyDataFile' "$hourlyDataFile"
 if [ ! -f "$hourlyDataFile" ] ; then
-	echo -e "var hourly_created=\"${_ds} ${_ts}\"\nvar hourly_updated=\"${_ds} ${_ts}\"\nvar disk_utilization=\"\"\nvar serverUptime=\"$_uptime\"\nvar freeMem=\"\",availMem=\"\",totMem=\"\"" > "$hourlyDataFile"
+	echo -e "var hourly_created=\"${_ds} ${_ts}\"\nvar hourly_updated=\"${_ds} ${_ts}\"\n" > "$hourlyDataFile"
 fi
 Send2Log "new-day: $_ds / $hourlyDataFile" 1
 

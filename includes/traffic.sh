@@ -8,7 +8,13 @@
 # Run - by cron jobs (update-reports & end-of-hour)
 #
 # History
+<<<<<<< Updated upstream
 # 2020-01-26: 4.0.7 - no changes
+=======
+# 2020-03-20: 4.0.8 - moved adding log/return rules to AddFinaliptableRule (in shared); minor tweaks to send2log messages
+# 2020-01-26: 4.0.7 - moved GetMACbyIP to shared.sh; allowed RETURN in iptables results 
+#                   - check for missing entries in mac-ip file; fixed LOG vs RETURN for final entry in YAMONv40
+>>>>>>> Stashed changes
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - minor tweak to loglevel of traffic at the end of the hour; 
 #                     removed brace brackets around memory in Totals
@@ -24,9 +30,7 @@
 
 hr=$(echo "$_ts" | cut -d':' -f1)
 mm=$(echo "$_ts" | cut -d':' -f2)
-
 sm=$(printf %02d $(( ${mm#0} - ${_updateTraffic:-4} )))
-Send2Log "traffic.sh: --> $hr:$sm -> $hr:$mm" 1
 
 GetMemory(){
 	GetMemoryField()
@@ -100,7 +104,7 @@ GetTraffic(){
 	local vnx=${1:--vnx}
 	local ltrl=0
 	[ "$vnx" == '-vnxZ' ] && ltrl=1
-	Send2Log "GetTraffic - $vnx ($ltrl)" 0
+	Send2Log "GetTraffic - $vnx ($ltrl) --> $hr:$sm -> $hr:$mm" 1
 	
 	local macIPList=$(cat "$macIPFile")
 	
@@ -148,6 +152,7 @@ GetTraffic(){
 			local newLine="hourlyData4({ \"id\":\"$_generic_mac-$ip\", \"hour\":\"$hr\", \"traffic\":\"${do:-0},0,$(( ${do:-0} * $currentlyUnlimited )),0\" })"
 			intervalTraffic="$intervalTraffic\n$newLine"
 			
+<<<<<<< Updated upstream
 			#delete the log entry to reset the totals to zero 
 			wo=$(iptables -L YAMONv40 -n --line-numbers | grep LOG | awk '{ print $1 }')
 			iptables -D YAMONv40 "$wo"
@@ -155,6 +160,17 @@ GetTraffic(){
 			Send2Log "GetTraffic: re-zeroed LOG rule in $YAMON_IPTABLES (entry #$wo)" 2
 			
 			ipt=$(echo -e "$ipt" | grep -v "$fl")
+=======
+			#delete the final RETURN/LOG entry in YAMONv40 to reset the totals to zero
+			AddFinaliptableRule
+			if [ "$_logNoMatchingMac" -eq "1" ] ; then
+				Send2Log "GetTraffic: re-zeroed LOG rule in $YAMON_IPTABLES (entry #$wo)" 2
+			else
+				Send2Log "GetTraffic: re-zeroed RETURN rule in $YAMON_IPTABLES (entry #$wo)" 2
+			fi
+
+			ipt=$(echo -e "$ipt" | grep -v "$fl") #delete just the first entry from the list of IPs
+>>>>>>> Stashed changes
 		else
 			local mac=$(echo "$macIPList" | grep "$tip" | cut -d' ' -f1)
 			[ -z "$mac" ] && mac=$(GetMACbyIP "$tip")

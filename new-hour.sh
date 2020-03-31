@@ -8,6 +8,7 @@
 # runs tasks needed to start a new hour
 # run: by cron
 # History
+# 2020-03-24: 4.0.8 - defensively check to see if hourlyDataFile exists and create if needed
 # 2020-01-26: 4.0.7 - no changes
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - no changes
@@ -20,7 +21,15 @@ d_baseDir=$(cd "$(dirname "$0")" && pwd)
 source "${d_baseDir}/includes/shared.sh"
 
 hr=$(echo $_ts | cut -d':' -f1)
-Send2Log "new hour: Start of hour $hr" 1
+Send2Log "new hour: Start of hour $hr ($_ds)" 1
+if [ -z "$(echo $hourlyDataFile | grep "$_ds")" ] ; then
+	Send2Log "new-hour: needed to change hourlyDataFile to $hourlyDataFile?!?" 3
+	hourlyDataFile="${tmplog}hourly_${_ds}.js"
+	ChangePath 'hourlyDataFile' "$hourlyDataFile"
+	if [ ! -f "$hourlyDataFile" ] ; then
+		echo -e "var hourly_created=\"${_ds} ${_ts}\"\nvar hourly_updated=\"${_ds} ${_ts}\"\n" > "$hourlyDataFile"
+	fi
+fi
 
 rawtraffic_hr="${tmplog}raw-traffic-$_ds-$hr.txt"
 ChangePath 'rawtraffic_hr' "$rawtraffic_hr"

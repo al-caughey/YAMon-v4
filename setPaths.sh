@@ -9,6 +9,7 @@
 # values generated during setup & verified on startup or on demand
 # run: /opt/YAMon4/setPaths.sh
 # History
+# 2020-03-20: 4.0.8 - set _iptablesWait & _dnsmasq_conf for Tomato
 # 2020-01-26: 4.0.7 - removed routerfile entry from paths (as no longer used); added defensive default when checking if IPv6 is enabled
 #                   - added another check for ipv6Enabled & static leases for Tomato (thx tvlz)
 # 2020-01-26: 4.0.6 - added {xxx:-_} defaults in a number of spots
@@ -187,12 +188,21 @@ echo -e "\n#Firmware specfic & dependent entries:" >> "${pathsFile}"
 	elif [ "$_firmware" -eq "3" ]; then #Tomato
 		AddEntry 'nameFromStaticLeases' "StaticLeases_Tomato"
 		AddEntry 'deviceNameField' '3'
+<<<<<<< Updated upstream
 		AddEntry 'deviceIPField' '2'
 		AddEntry '_dnsmasq_conf' "/tmp/etc/dnsmasq.conf"
 		AddEntry '_dnsmasq_leases' "/tmp/var/lib/misc/dnsmasq.leases"
 		AddEntry "_wwwPath" "${_wwwPath:-/tmp/var/wwwext/}"
 		AddEntry "_wwwURL" '/user'
 		_lan_iface='br-0'
+=======
+		AddEntry '_dnsmasq_conf' "" #"/tmp/etc/dnsmasq.conf has no device names"
+		AddEntry '_dnsmasq_leases' "/tmp/var/lib/misc/dnsmasq.leases"
+		AddEntry "_wwwPath" "${_wwwPath:-/tmp/var/wwwext/}"
+		AddEntry "_wwwURL" '/user'
+		_lan_iface='br0'
+		AddEntry "_iptablesWait" '' # No wait in iptables for Tomato MIPS routers, ARM routers?
+>>>>>>> Stashed changes
 		
 		hip6=$(nvram get ipv6_enable)
 		[ "${hip6:-0}" -eq '1' ] && ipv6Enabled=1

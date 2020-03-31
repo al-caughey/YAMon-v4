@@ -12,7 +12,7 @@ echo -en "\nFind in File:  "
  #echo $1 / $2 / $3
  
 pattern="$1"
-excluding="${2:-\.log|\.js|\.html|\.gz}"
+excluding="${2:-\.log|\.js|\.html|\.gz|\.txt}"
 path="${3:-$d_baseDir}"
 
 [ ! -d "$path" ] && echo -e " Error - \`$path\` does not exist?!?\n" && exit 0

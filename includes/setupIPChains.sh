@@ -6,7 +6,13 @@
 # functions to define chains in iptables & optionally ip6tables
 #
 # History
+<<<<<<< Updated upstream
 # 2020-01-26: 4.0.7 - added wait option ( -w -W1) to commands that add entries in iptables
+=======
+# 2020-03-20: 4.0.8 - moved adding log/return rules to AddFinaliptableRule (in shared)
+# 2020-03-20: 4.0.7 - added wait option ( -w -W1) to commands that add entries in iptables; 
+#                   - then added _iptablesWait 'cause not all firmware variants support iptables -w...
+>>>>>>> Stashed changes
 # 2020-01-03: 4.0.6 - added check for _logNoMatchingMac in SetupIPChains
 # 2019-12-23: 4.0.5 - no changes
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -140,6 +146,7 @@ SetupIPChains(){
 			CheckTables
 		done
 		
+<<<<<<< Updated upstream
 		if [ "${_logNoMatchingMac:-0}" -eq "1" ] ; then
 			$cmd -A "$YAMON_IPTABLES" -j LOG --log-prefix "YAMon: " -w -W1
 		else
@@ -147,8 +154,13 @@ SetupIPChains(){
 		fi
 		
 	done
+=======
+		AddFinaliptableRule
+>>>>>>> Stashed changes
 
+	done
 }
+
 AddNetworkInterfaces(){
 	Send2Log "AddNetworkInterfaces:" 1
 	listofInterfaces=$(ls /sys/class/net)

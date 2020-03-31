@@ -6,7 +6,12 @@
 # various utility functions (shared between one or more scripts)
 #
 # History
+<<<<<<< Updated upstream
 # 2020-01-26: 4.0.7 - added static leases for Tomato (thx tvlz)
+=======
+# 2020-03-20: 4.0.8 - added AddFinaliptableRule to clear & create log/return rules in YAMONv40 chain; force MAC addresses to lowercase (thx - tlvz)
+# 2020-03-19: 4.0.7 - added static leases for Tomato (thx tvlz)
+>>>>>>> Stashed changes
 #                   - added wait option ( -w -W1) to commands that add entries in iptables
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - changed loglevel of start messages in logs
@@ -91,11 +96,53 @@ CheckGroupChain(){
 		$cmd -A "$groupChain" -j "RETURN" -w -W1
 	fi
 }
+<<<<<<< Updated upstream
+=======
+GetMACbyIP(){
+	local ip="$1"
+	local tip="\b${ip//\./\\.}\b"
+
+	# first check arp
+	local mip=$(cat /proc/net/arp | grep "$tip" | awk '{print $4}') | tr "[A-Z]" "[a-z]")
+	if [ -n "$mip" ] ; then
+		echo "$mip" 
+		return
+	fi
+	
+	# then check users.js
+	local dd=$(echo "$_currentUsers" | grep -e "^mac2ip({.*})$" | grep "$tip")
+	if [ -z "$dd" ] ; then
+		Send2Log "GetMACbyIP - no matching entry for $ip in users.js $(IndentList $dd)" 2
+	else
+		local id=$(GetField "$dd" 'id')
+		local mac=$(echo "$id"| cut -d- -f1)
+		Send2Log "GetMACbyIP - $ip --> $id  --> $mac"
+		[ -n "$mac" ] && echo "$mac"
+	fi
+}
+
+GetDeviceGroup(){
+	local mgList=$(echo "$_currentUsers" | grep -e "^mac2group({.*})$")
+	local dd=$(echo "$mgList" | grep "$1")
+	if [ -z "$dd" ] ; then
+		Send2Log "GetDeviceGroup - no matching entry for $1 in users.js... set to '$_defaultGroup' " 2  #to do...
+		echo "${_defaultGroup:-${_defaultOwner:-Unknown}}"
+		return
+	fi
+	local group=$(GetField "$dd" 'group')
+		
+	Send2Log "GetDeviceGroup - $1 / $2 --> $dd --> $group" 
+	echo "$group"	
+}
+ 
+>>>>>>> Stashed changes
 CheckIPTableEntry(){
 
 	Send2Log "CheckIPTableEntry: $1 /  $2 " 0
 	
 	local ip=$1
+	local tip="\b${ip//\./\\.}\b"
+
 	local groupName=${2:-Unknown}
 	local chain="$YAMON_IPTABLES"
 	Send2Log "CheckIPTableEntry: ip=$ip / cmd=$cmd / chain=$YAMON_IPTABLES " 0
@@ -116,7 +163,7 @@ CheckIPTableEntry(){
 		local n=1
 		while [ true ]; do
 			[ -z "$ip" ] && break
-			local dup_num=$($cmd -L "$YAMON_IPTABLES" -n --line-numbers | grep -m 1 -i "\b$ip\b" | cut -d' ' -f1)
+			local dup_num=$($cmd -L "$YAMON_IPTABLES" -n --line-numbers | grep -m 1 -i "$tip" | cut -d' ' -f1)
 			[ -z "$dup_num" ] && break
 			$cmd -D "$YAMON_IPTABLES" $dup_num -w -W1
 			n=$(( $n + 1 ))
@@ -303,7 +350,6 @@ CheckMAC2GroupinUserJS(){
 		local groupChain="${YAMON_IPTABLES}_$(echo $gn | sed "s~[^a-z0-9]~~ig")"
 		sed -i "s~$matchesMACGroup~$newLine~" $_usersFile
 		#To do - change entries in ip[6]tables
-		# iptables -E YAMONv40_Interfaces2 YAMONv40_Interfaces
 		local matchingMACs=$(cat "$_usersFile" | grep -e "^mac2ip" | grep "\"active\":\"1\"")
 		IFS=$'\n'
 		for line in $matchingMACs ; do
@@ -487,4 +533,39 @@ CheckIntervalFiles(){
 	var monthly_billed_down=\"0\"	// 0 GB
 	var monthly_billed_up=\"0\"	// 0 GB
 	" >> $_intervalDataFile
+}
+AddFinaliptableRule(){
+
+	local commands='iptables'
+	[ -n "$ip6Enabled" ] && commands='iptables,ip6tables'
+
+	DeleteiptableRule(){
+		local ruleName="$1"
+
+		for cmd in $commands
+		do
+			local nl=0
+			while (1) ; do
+				local ln=$($cmd -L "$YAMON_IPTABLES" -n --line-numbers | grep "$ruleName" | awk '{ print $1 }')
+				[ -z "$ln" ] && break
+				eval $cmd -D "$YAMON_IPTABLES" "$ln" "$_iptablesWait"
+				nl=$((nl+1))
+			done
+			Send2Log "DeleteiptableRule: deleted $nl $ruleName rules from $cmd: $YAMON_IPTABLES" $nl
+		done
+	}
+	
+	DeleteiptableRule "LOG"
+	DeleteiptableRule "RETURN"
+	
+	for cmd in $commands
+	do
+		if [ "$_logNoMatchingMac" -eq "1" ] ; then
+			eval $cmd -A "$YAMON_IPTABLES" -j LOG --log-prefix "YAMon: " "$_iptablesWait"
+			Send2Log "AddFinaliptableRule: added LOG rule in $cmd: $YAMON_IPTABLES" 0
+		else
+			eval $cmd -A "$YAMON_IPTABLES" -j RETURN			
+			Send2Log "AddFinaliptableRule: added RETURN rule in $cmd: $YAMON_IPTABLES" 0
+		fi		
+	done
 }

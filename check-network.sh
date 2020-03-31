@@ -8,6 +8,7 @@
 # checks arp & ip for new devices and/or ip changes on the network
 # run: by cron
 # History
+# 2020-03-20: 4.0.8 - for mac addresses to lowercase
 # 2020-01-26: 4.0.7 - added check for error in Check4UpdatesInReports results
 # 2020-01-03: 4.0.6 - only check dmesg if _logNoMatchingMac==1
 # 2019-12-23: 4.0.5 - no changes (yet)
@@ -23,11 +24,11 @@ source "${d_baseDir}/includes/start-stop.sh"
 Send2Log "Checking the network for new devices" 1
 
 excluding='FAILED,STALE,INCOMPLETE,00:00:00:00:00:00' # excludes listed entries from the results
-arpResults=$(cat /proc/net/arp | grep "^[1-9]")
+arpResults=$(cat /proc/net/arp | grep "^[1-9]" | tr "[A-Z]" "[a-z]")
 arpList=$(echo "$arpResults" | grep -Ev "(${excluding//,/|})" | awk '{ print $4,$1 }')
 #[ -n "$arpList" ] && Send2Log "Check4NewDevices: arpList: $(IndentList "$arpList")"
 
-ipResults=$($_IPCmd) # a hack for firmware variants which do not include the full ip command (so `ip neigh show` does not return valid info)
+ipResults=$($_IPCmd | tr "[A-Z]" "[a-z]") # a hack for firmware variants which do not include the full ip command (so `ip neigh show` does not return valid info)
 ipList=$(echo "$ipResults" | grep -Ev "(${excluding//,/|})" | awk '{ print $5,$1 }')
 #[ -n "$ipList" ] && Send2Log "Check4NewDevices: ipList: $(IndentList "$ipList")"
 
@@ -91,8 +92,26 @@ Check4NewDevices(){
 	# add the YAMon entries of dmesg into the logs to see where the unmatched data is coming from (and then clear dmesg)
 	[ "${_logNoMatchingMac:-0}" -eq "1" ] && local dmsg=$(dmesg -c | grep YAMon)
 	if [ -z "$newIPList" ] ; then
+<<<<<<< Updated upstream
 		Send2Log "Check4NewDevices: no new devices"
 		
+=======
+		Send2Log "Check4NewDevices: no new devices... checking that all IP addresses exist in iptables"
+		local ipsFromARP=$(cat /proc/net/arp | grep "^[1-9]" | grep -Ev "(${excluding//,/|})" | awk '{ print $1 }' | sort)
+		local iptablesList=$(iptables -L $YAMON_IPTABLES -vnx | awk '{ print $8 }' | grep -v '0.0.0.0' | sort | grep "^[1-9]" | tr "\n" '|')
+		iptablesList="${iptablesList%|}"
+		iptablesList="${iptablesList//|/$|}"
+		iptablesList="${iptablesList//\./\\.}"
+
+		unmatchedIPs=$(echo "$ipsFromARP" | grep -Ev "${iptablesList%|}")
+		for nip in $unmatchedIPs ; do
+			local mac=$(GetMACbyIP "$nip")
+			local groupName=$(GetDeviceGroup "$mac" "$nip")
+			Send2Log "Check4NewDevices: $nip ($mac / $groupName) is missing in iptables" 2
+			CheckIPTableEntry "$nip" "$groupName"
+		done
+				
+>>>>>>> Stashed changes
 		[ -n "$dmsg" ] && Send2Log "Check4NewDevices: Found YAMon entries in dmesg" 2
 		IFS=$'\n'
 		for line in $dmsg
