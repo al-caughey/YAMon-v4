@@ -8,9 +8,9 @@
 #																		 #
 ##########################################################################
 HISTORY
-version 4.0.4 - 2019-12-28 - Al C - lots of bug fixes
-version 4.0.0 - 2015-11-16 - Al C - first iteration with the new features
-
+4.0.7 (2020-03-20) - finally got the gauges working on the summary page
+4.0.4 (2019-12-28) - lots of bug fixes
+4.0.0 (2015-11-16) - first iteration with the new features
 */
 var nDevicesReadFailures=0,nMonthlyReadFailures=0,nHourlyReadFailures=0,nLiveReadFailures=0
 var _dec,_settings_pswd
@@ -24,14 +24,13 @@ var devices=[],names=[],monthly=[],hourly=[],hourly_totals={},corrections=[],int
 var monthly_totals
 var pnd_data={'start':{'down':0,'up':0},'total':{'down':0,'up':0,'dropped':0,'local':0,'lost':0},'usage':[]}
 var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-var _unlimited_usage,_doLiveUpdates=1,_liveFileName='./js/live_data4.js',_doCurrConnections=1,_updatefreq=60,_organizeData=2,freeMem,availMem, totMem
+var _unlimited_usage,_doLiveUpdates=1,_liveFileName='./js/live_data4.js',_doCurrConnections=1,_updatefreq=60,_organizeData=2
 var dispUnits=['b','Kb','MB','GB','TB','PB']
 var livekbs_do,livekbs_up,s_usage,numLU=1
 var gauges,livekbs_do_chart,livekbs_up_chart,sl_chart;
 var g_base, darkmodeBG='#888'
 var maxGrWidth
 var ip2device={}
-var totMem=0,availMem=null,disk_utilization="0%",serverUptime=null
 var _slider_left=0,_slider_right=5
 var inDarkMode=false
 var colours_list=['DarkOliveGreen','Indigo','MediumPurple','Purple','MidnightBlue','DarkOrange','MediumSeaGreen','Red','Aqua','DarkOrchid','MediumSlateBlue','RosyBrown','AquaMarine','DarkRed','MediumSpringGreen','RoyalBlue','DarkSalmon','MediumTurquoise','SaddleBrown','DarkSeaGreen','LawnGreen','MediumVioletRed','Salmon','DarkSlateBlue','SandyBrown','DarkSlateGray','LightBlue','SeaGreen','DarkTurquoise','Blue','DarkViolet','Sienna','BlueViolet','DeepPink','Silver','Brown','DeepSkyBlue','Navy','SkyBlue','BurlyWood','DimGray','LightGreen','SlateBlue','CadetBlue','DodgerBlue','LightPink','Olive','SlateGray','Chartreuse','FireBrick','LightSalmon','OliveDrab','Chocolate','LightSeaGreen','Orange','SpringGreen','Coral','ForestGreen','LightSkyBlue','OrangeRed','SteelBlue','CornFlowerBlue','Fuchsia','LightSlateGray','Orchid','Tan','LightSteelBlue','PaleGoldenRod','Teal','Crimson','PaleGreen','Thistle','Cyan','Gold','Lime','PaleTurquoise','Tomato','DarkBlue','GoldenRod','LimeGreen','PaleVioletRed','Turquoise','DarkCyan','Gray','Violet','DarkGoldenRod','Green','Magenta','PeachPuff','Wheat','DarkGray','GreenYellow','Maroon','Peru','DarkGreen','MediumAquaMarine','Pink','DarkKhaki','HotPink','MediumBlue','Plum','Yellow','DarkMagenta','IndianRed','MediumOrchid','PowderBlue','YellowGreen','Ivory','Beige','WhiteSmoke','Bisque','Linen','OldLace','LightCoral','Lavender','Azure','Black','PapayaWhip','LightYellow','FloralWhite','LemonChiffon','AntiqueWhite','MintCream','SeaShell','LavenderBlush','LightCyan','LightGoldenrodYellow','BlanchedAlmond','MistyRose','NavajoWhite','Khaki','Moccasin','LightGray','Cornsilk','Gainsboro','HoneyDew','GhostWhite','White','AliceBlue','Snow'],n_colours=colours_list.length
@@ -45,7 +44,8 @@ $(document).ready(function (){
 
 	$('.html_version').text(_html_version)
 	if(typeof(_version)=='undefined'){
-		_version=4.0
+		var _version=4.0 //should never get this because _version should be defined in config4.js?!?
+		//To-do - add a getmessage alert that config4.js is not properly configured?!?
 	}
 	$('.scriptVersion').text(_version)
 	_organizeData=2 //To-Do - eliminate references to _organizeData
@@ -72,9 +72,6 @@ $(document).ready(function (){
 	$('#sp_minSL').attr('id','sp_15minSL')
 	addISPList()
 	maxGrWidth=Math.min(1000, $('.tab-div').css('width').replace('px','')-44)
-	freeMem=freeMem||0
-	availMem=availMem||0
-	totMem=totMem||0
 
 	resetdates()
 	//setReportDates()
@@ -206,10 +203,10 @@ function loadMonthly(){
 		var _usageFileName='mac_usage.js'
 		var _hourlyFileName='hourly_data.js'
 		var dp=_wwwData+(_organizeData==0?'':(_organizeData==1?myr+'/':myr+'/'+mn+'/'))
-		var datafile=dp+myr+'-'+mn+'-'+(!da?'':(da+'-'))+_usageFileName
+		var mdatafile=dp+myr+'-'+mn+'-'+(!da?'':(da+'-'))+_usageFileName
 		var md = $.Deferred()
 		monthlyDataCap=null
-		$.getScript(datafile)
+		$.getScript(mdatafile)
 		
 		.done(function(dlist,textStatus){
 			if(dlist==''){
@@ -235,7 +232,7 @@ function loadMonthly(){
 				$('.spUsageCap').text(monthlyDataCap).addClass('GBytes')
 			}
 			flushChanges()
-			$('#MonthlyHeader .icon').attr('title', 'View the contents of the monthly usage data file').data('link', datafile)
+			$('#MonthlyHeader .icon').attr('title', 'View the contents of the monthly usage data file').data('link', mdatafile)
 			var cdown=0,cup=0
 			for(var d in corrections){
 				if(corrections[d]){
@@ -261,7 +258,7 @@ function loadMonthly(){
 				if (_cr_Date>=_re_Date) break
 			}
 			if(sa){
-				ShowAlert("<p>Your <a href='"+datafile+"' target='_blank'>monthly data</a> file is missing traffic at the start of the interval the following dates:"+dl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'missing-monthly')
+				ShowAlert("<p>Your <a href='"+mdatafile+"' target='_blank'>monthly data</a> file is missing traffic at the start of the interval the following dates:"+dl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'missing-monthly')
 				showLoading("The monthly data file has gaps?!?",'warning')
 			} 
 			var nn=_rs_Date, cd, gl=''
@@ -278,7 +275,7 @@ function loadMonthly(){
 				nn=newdate(nn,1)
 			}
 			if((dg) && (dl!=gl)){
-				ShowAlert("<p>Your <a href='"+datafile+"' target='_blank'>monthly data</a> file is missing traffic on the following dates:"+gl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'monthly-gaps')
+				ShowAlert("<p>Your <a href='"+mdatafile+"' target='_blank'>monthly data</a> file is missing traffic on the following dates:"+gl+"</p><p>Click the links to see if the files and data do exist.  If they do, see `<a href='http://usage-monitoring.com/help/?t=missing-data' target='_blank'>I have gaps in my monthly reports?!?</a>`</p>",'monthly-gaps')
 				showLoading("The monthly data file has gaps?!?",'warning')
 			} 
 			md.resolve()
@@ -354,10 +351,7 @@ function loadHourly(cleardata){
 	})
 	//$('#DailyData').html('')
 	$('#DailyData .is_d').addClass('clear')
-	serverUptime=null
-	availMem=null
-	totMem=0
-	disk_utilization="0%"
+	
 	var dn=_cr_Date.getDate()*1, da=twod(dn)
 	var mo=twod(_cr_Date.getMonth()-(-1))
 	var yr=_cr_Date.getFullYear()
@@ -400,7 +394,7 @@ function loadHourly(cleardata){
 	$.getScript(datafile)
 	.done(function(dlist,textStatus){
 		$('#DailyUsageHeader .icon').attr('title', 'View the contents of the hourly usage data file').data('link', datafile)
-		$('#uptime').text(!serverUptime?'n/a':sec2text(serverUptime))
+		//To-do... get uptime from old v3 data files
 		
 		if(typeof(users_updated)==='undefined') var users_updated=''
 		$('#sp_users_updated').text(lastmod(users_updated,'')).attr('title',users_updated)
@@ -437,9 +431,7 @@ function loadHourly(cleardata){
 				}
 				monthly[k].usage[dn].down+=hourly[k].down
 				monthly[k].usage[dn].up+=hourly[k].up
-				console.log(devices[k])
 				var gn=devices[k].cg
-			
 				if(!names[gn]){
 					var n=Object.keys(names).length
 					if(_unlimited_usage=='0'){
@@ -474,7 +466,8 @@ function loadHourly(cleardata){
 				}
 				tmv(k)
 			})
-			monthly_totals.pnd[dn]={down:pnd_data.total.down,up:pnd_data.total.up}
+			var o2u=!!interfaces['br0']?interfaces['br0']:interfaces['br-lan']
+			monthly_totals.pnd[dn]={down:o2u.down,up:o2u.up}
 			$('.hwncd').show()
 			var maxHr=today.getHours()
 		}
@@ -483,6 +476,8 @@ function loadHourly(cleardata){
 			$('.hwncd').hide()
 		}
 		updateDashboard()
+		//To-do --> drawSummaryGauges() using the v3 data
+		//drawSummaryGauges(disk_utilization, freeMem+','+availMem+','+totMem) // won't work for with v4 data files
 		var cmo=_rs_Date.getMonth()*1
 		if(_rs_Date.getDate()!=_ispBillingDay)cmo--
 		var ry=_rs_Date.getFullYear(),rm=twod(cmo+1),rd=twod(_ispBillingDay),bill=ry+'-'+rm+'-'+rd,mts=monthly_totals.up+';'+monthly_totals.down
@@ -512,28 +507,6 @@ function loadHourly(cleardata){
 		}
 		saveSettings()
 
-		var du=(disk_utilization.replace('%','')*1).toFixed(_dec)
-		var mf=totMem==0?0:((1-(freeMem)/totMem)*100).toFixed(_dec),gaugeOptions={animation:{duration:2000,easing:'inAndOut'},width:200,height:80,greenFrom:0,greenTo:74,yellowFrom:75,yellowTo:90,redFrom:90,redTo:100,minorTicks:5}
-		if (!google||!google.visualization||!google.visualization.arrayToDataTable){
-			//console.log('Error - google.visualization.arrayToDataTable')
-		}
-		else{
-			gauges=new google.visualization.Gauge(document.getElementById('gauges'));
-			if(!availMem){
-				var data=google.visualization.arrayToDataTable([['Label','Value'],['Disk',du*1],['Memory',mf*1]])
-				gauges.draw(data,gaugeOptions)
-				$("#gauges td:nth-child(3)").remove()
-			}
-			else{
-				var ma=totMem==0?0:((1-(availMem)/totMem)*100).toFixed(_dec)
-				var data=google.visualization.arrayToDataTable([['Label','Value'],['Disk',du*1],['Avail.',ma*1],['Memory',mf*1]])
-				gaugeOptions.width=300
-				gauges.draw(data,gaugeOptions)
-			}
-		}
-		$("#gauges td:first").attr('title','Disk Utilization: '+du+'%')
-		$("#gauges td:nth-child(2)").attr('title','Available Memory: '+ma+'% ('+availMem+' bytes)')
-		$("#gauges td:last").attr('title','Memory Utilization: '+mf+'% ('+freeMem+' bytes free)')
 		setSummaryTotals()
 		nHourlyReadFailures=0
 
@@ -564,7 +537,7 @@ function loadHourly(cleardata){
 		$("#mb-filter").val(sel)
 
 		clearLoading()
-		var dii=Math.floor((_re_Date-_rs_Date)/(1000*60*60*24)),cdii=Math.floor((_cr_Date-_rs_Date)/(1000*60*60*24))
+		var dii=Math.floor((_re_Date-_rs_Date)/(1000*60*60*24)), cdii=Math.floor((_cr_Date-_rs_Date)/(1000*60*60*24))
 		$( ".report-date" ).slider('option','max',dii)
 		$( ".report-date" ).slider('option','value',cdii)
 		var cw=$('.current-date').textWidth(),mw=$('.sp-current-date').width()-_slider_right,nd=$('.report-date').slider('option','max')-1,os=(mw-cw)/dii+_slider_left
@@ -882,7 +855,7 @@ function hu(arr){
 		chu(mac)
 	}
 	var hr=arr.hour*1,down=arr.down*1,up=arr.up*1
-
+	if (!hourly_totals.usage[hr]) hourly_totals.usage[hr]={down:0,up:0}
 	hourly[mac].down+=down
 	hourly[mac].up+=up
 	hourly[mac].usage[hr].down+=down
@@ -1124,10 +1097,11 @@ function setDailyTab(){
 	var arr=[[' .downloads',dtot],[' .uploads',utot],[' .ul-down',ul_dtot],[' .ul-up',ul_utot],[' .tByts',total]]
 	updateRow('.DailyFooter',arr)
 	$('thead .DailyFooter')[g_Settings['DupTotals']?'show':'hide']()
-	if(!pnd_data||!pnd_data.total){
+	var o2u=!!interfaces['br0']?interfaces['br0']:interfaces['br-lan']
+	if(!o2u){
 		$('#RouterFooter,#DiffFooter,#PercentFooter,#LocalFooter').hide()
 	}
-	else if(pnd_data.total.up==0&&pnd_data.total.down==0){
+	else if(o2u.up==0&&o2u.down==0){
 		$('#RouterFooter,#DiffFooter,#PercentFooter').hide()
 	}
 	else{
@@ -1135,14 +1109,14 @@ function setDailyTab(){
 		updateRow('#LocalFooter',arr)
 
 		$('#RouterFooter,#DiffFooter,#PercentFooter')[inc_rd?'show':'hide']()
-		arr=[[' .downloads',pnd_data.total.down],[' .uploads',pnd_data.total.up],[' .tByts',pnd_data.total.down+pnd_data.total.up]]
+		arr=[[' .downloads',o2u.down],[' .uploads',o2u.up],[' .tByts',o2u.down+o2u.up]]
 		updateRow('#RouterFooter',arr)
-		$('#RouterFooter .percent').text(((pnd_data.total.down+pnd_data.total.up)/total*100-100).toFixed(_dec))
-		arr=[[' .downloads',pnd_data.total.down-dtot],[' .uploads',pnd_data.total.up-utot],[' .tByts',pnd_data.total.down+pnd_data.total.up-total]]
+		$('#RouterFooter .percent').text(((o2u.down+o2u.up)/total*100-100).toFixed(_dec))
+		arr=[[' .downloads',o2u.down-dtot],[' .uploads',o2u.up-utot],[' .tByts',o2u.down+o2u.up-total]]
 		updateRow('#DiffFooter',arr)
-		$('#PercentFooter .downloads').text(((pnd_data.total.down-dtot)/dtot*100).toFixed(_dec))
-		$('#PercentFooter .uploads').text(((pnd_data.total.up-utot)/utot*100).toFixed(_dec))
-		$('#PercentFooter .tByts').text(((pnd_data.total.down+pnd_data.total.up-total)/total*100).toFixed(_dec))
+		$('#PercentFooter .downloads').text(((o2u.down-dtot)/dtot*100).toFixed(_dec))
+		$('#PercentFooter .uploads').text(((o2u.up-utot)/utot*100).toFixed(_dec))
+		$('#PercentFooter .tByts').text(((o2u.down+o2u.up-total)/total*100).toFixed(_dec))
 	}
 	$('#h_sd-dd,#h_sd-ddl, #submenu').remove()
 	$('#c-h_sd').append("<span id='submenu'><span id='h_fd-all' class='h_fd'>All</span><span id='h_fd-none' class='h_fd'>None</span></span>")
@@ -1833,6 +1807,29 @@ function hourlyData4(arr){
 	hourly[mac].ul_up+=1*traff[3]||0
 	hourly[mac].usage[hr]={down:1*traff[0]||0,up:1*traff[1]||0,ul_down:1*traff[2]||0,ul_up:1*traff[3]||0}
 }
+
+function drawSummaryGauges(du, mem){
+	var du=(du.replace('%','')*1)
+	var m=mem.split(',')
+	$("#sp-freeMem").text(mem[0])
+	if (!google||!google.visualization||!google.visualization.arrayToDataTable){
+		//console.log('Error - google.visualization.arrayToDataTable')
+	}
+	else{
+		var mf=((1-(m[0])/m[2])*100).toFixed(0)
+		var ma=((1-(m[1])/m[2])*100).toFixed(0)
+
+		gauges=new google.visualization.Gauge(document.getElementById('gauges'));
+		var data=google.visualization.arrayToDataTable([['Label','Value'],['Disk',du*1],['Avail.',ma*1],['Memory',mf*1]])
+		var gaugeOptions={animation:{duration:2000,easing:'inAndOut'},width:200,height:80,greenFrom:0,greenTo:74,yellowFrom:75,yellowTo:90,redFrom:90,redTo:100,minorTicks:5}
+		gaugeOptions.width=300
+		gauges.draw(data,gaugeOptions)
+	}
+	$("#gauges td:first").attr('title','Disk Utilization: '+du+'%')
+	$("#gauges td:nth-child(2)").attr('title','Available Memory: '+ma+'% ('+m[1]+' bytes)')
+	$("#gauges td:last").attr('title','Memory Utilization: '+mf+'% ('+m[0]+' bytes free)')
+}
+	
 function Totals(arr){
 	//Totals({ "hour":"00", "uptime":"1940773.59", "interval":"570322357,8898462","interfaces":'[ {"n":"guest_turris_0", "t":"336,0"}, {"n":"wlan0", "t":"62402580,1547435"}, {"n":"eth1", "t":"1328688,59660357"}, {"n":"wlan1", "t":"238778,52878"}, {"n":"br-lan", "t":"61414914,1516318"}, {"n":"br-guest_turris", "t":"0,0"}]',"memory":'{19452,712680,1030692}',"disk_utilization":'61%' })
 	//if (!hourly[mac]) hourly[mac]={down:0,up:0,ul_down:0,ul_up:0,usage:{}}
@@ -1854,9 +1851,9 @@ function Totals(arr){
 	pnd_data.usage=o2u.usage
 	var mem=(arr.memory).replace(/[{}]/g,"").split(',')
 	hourly_totals.memory[hr]=mem
-	$("#sp-freeMem").text(mem[0])
-	totMem=mem[2]
-	disk_utilization=arr.disk_utilization
+	drawSummaryGauges(arr.disk_utilization, arr.memory )
+	$('#uptime').text(sec2text(arr.uptime))
+
 }
 
 function GrandTotalDaily(arr){
