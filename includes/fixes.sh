@@ -6,7 +6,7 @@
 # various fixed to data files as issues are discovered during beta
 #
 # History
-# 2020-01-26: 4.0.7 - no changes
+# 2020-03-19: 4.0.7 - properly renames previously copied v3 hourly & monthly data files
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - no changes
 # 2019-11-24: 4.0.4 - no changes (yet)
@@ -79,9 +79,60 @@ FixDefaultDeviceNames(){
 	done
 	[ -n "$changed" ] && UsersJSUpdated
 }
+Renamev3MonthlyFiles(){
+
+	Send2Log "Renamev3MonthlyFiles: Renaming YAMonv3 monthly data files in $_path2data"
+	local mfl=$(find "$_path2data" | grep 'mac_data.js')
+	IFS=$'\n'
+	local n=0
+	local skipped=0
+	local c=0
+	# v3: very old: 2015-03-05-mac_data.js (ignored)
+	# v3:   old: 2020-03-mac_data.js
+	# v4:   new: 2020-03-mac_usage.js
+	for filepath in $mfl ; do
+		local newpath=${filepath//_data/_usage}
+		if [ -f "$np" ] ; then
+			skipped=$((skipped+1))
+		else
+			mv "$filepath" "$newpath"
+		fi
+		n=$((n+1))		
+	done
+	Send2Log "Renamev3MonthlyFiles: Copied $n monthly data files & skipped $skipped"
+}
+
+Renamev3HourlyFiles(){
+
+	Send2Log "Renamev3MonthlyFiles: Renaming YAMonv3 hourly data files in $_path2data"
+	local hfl=$(find "$_path2data" | grep 'hourly_data.js')
+	IFS=$'\n'
+	local n=0
+	local skipped=0
+	local c=0
+	# v3:   old: 2020-03-18-hourly_data.js
+	# v4:   new: hourly_2020-03-12.js
+	for filepath in $hfl ; do
+		local filename=${filepath##*/}
+		local newfilename=${filename/-hourly_data/}
+		local newfilepath=${filepath/$filename/}hourly_$newfilename
+		if [ -f "$newfilepath" ] ; then
+			skipped=$((skipped+1))
+		else
+			mv "$filepath" "$newfilepath"
+		fi
+		n=$((n+1))		
+	done
+	Send2Log "Renamev3MonthlyFiles: Copied $n monthly data files & skipped $skipped"
+}
+	
 FixDefaultDeviceNames
 
 FixMonthlyUsageFile
+
+# fix the bug that copies old v3 data files but does not rename them
+Renamev3MonthlyFiles
+Renamev3HourlyFiles
 
 sleep 2
 echo -e "Fixes complete"

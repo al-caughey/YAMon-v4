@@ -8,6 +8,7 @@
 # History
 # 2020-01-26: 4.0.7 - changes to cronJobsFile, stopService & startService for Tomato
 #					- renamed StartCronJobs to StartScheduledJobs
+#					- fixed StopCruJobs() issue in Tomato
 # 2020-01-03: 4.0.6 - no changes
 # 2019-12-23: 4.0.5 - added timestamp to url in SetAccessRestrictions
 # 2019-11-24: 4.0.4 - added 2>/dev/null to start/stopService calls
@@ -22,12 +23,8 @@ if [ "$_firmware" -eq "0" ] ; then
 	wc=$(ps | grep -v grep | grep cron | awk '{ print $3 }')
 	stopService="stopservice $wc root"
 	startService="startservice $wc root"
-elif [ "$_firmware" -eq "3" ] ; then #Tomato
-	# no longer needed?
-	#cronJobsFile="/opt/var/cron/crontabs/root"
-	#cronJobsFile="/var/spool/cron/crontabs/root"
-	#stopService="/opt/etc/init.d/S10cron stop"
-	#startService="/opt/etc/init.d/S10cron restart" 
+elif [ "$_firmware" -eq "2" ] || [ "$_firmware" == "3" ] || [ "$_firmware" -eq "5" ] ; then #Tomato, AsusMerlin & variants
+	Send2Log "Do nothing Firmware uses cru" 0 #Need something here or complaint of else on next line
 else
 	cronJobsFile=/etc/crontabs/root
 	stopService="/etc/init.d/cron stop"
@@ -133,11 +130,11 @@ StopScheduledJobs(){
 	}
 
 	StopCruJobs(){
-		local jobList=$(cru l | grep 'yamon')
+		local jobList=$(cru l | grep 'yamon' | tr -d '#') # Remove '#' from cru id #yamon*#
 		IFS=$'\n'
 		for job in $jobList
 		do
-			local jn=$(echo "$job" | awk '{ print $3 }')
+			local jn=$(echo "$job" | awk '{ print $7 }')
 			cru d "$jn"
 		done
 		unset $IFS

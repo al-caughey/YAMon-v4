@@ -5,12 +5,9 @@
 #
 # Script to download the latest files from usage-monitoring.com
 #
-#   Updated: 2016-06-13 - fail over to wget if curl does not work in getlatest()
-#   Updated: 2016-06-19 - fixed previous changes
-#   Updated: 2016-11-04 - added wd.sh
-#   Updated: 2016-12-30 - added purge.sh
-#   Updated: 2019-08-02 - added checkusers.sh
-#   Updated: 2019-10-26 - updated for v4.0
+#   2019-10-26 - updated for v4.0.5... added new files to the list
+#   2019-10-26 - updated for v4.0
+#   2019-08-02 - added checkusers.sh
 #
 ##########################################################################
 _ts=$(date +"%s")
@@ -55,6 +52,9 @@ getlatest()
 		return
 	fi
 	
+	#change windows linefeeds to unix
+	sed -i -e 's/\r$//' "$dst" #change windows linefeeds to unix
+
 	if [ -f "$dst" ] && [ -n "$2" ] ; then
 		echo "     > Loading source for $dst" >&2
 		source "$dst"
@@ -73,6 +73,8 @@ getlatest 'includes/dailytotals.sh'
 getlatest 'includes/fixes.sh'
 getlatest 'includes/prompts.sh' 1
 getlatest 'includes/setupIPChains.sh'
+
+showEcho=1 # to prevent redirection of all output to the logs
 getlatest "includes/shared.sh"
 getlatest 'includes/start-stop.sh'
 getlatest 'includes/traffic.sh'
@@ -94,12 +96,13 @@ getlatest 'new-day.sh'
 getlatest 'new-hour.sh'
 getlatest 'pause.sh'
 getlatest 'purge.sh'
+getlatest 'run-fixes.sh'
 getlatest 'setPaths.sh'
 getlatest 'start.sh'
 getlatest 'update-live-data.sh'
 getlatest 'update-reports.sh'
 getlatest 'up-rev-users-js.sh'
-
+getlatest 'validate.sh'
 getlatest "setup$_version.sh"
 [ -f "${YAMON}setup.sh" ] && rm "${YAMON}setup.sh"
 ln -s "${YAMON}setup$_version.sh" "${YAMON}setup.sh"

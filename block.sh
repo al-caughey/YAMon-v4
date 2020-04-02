@@ -60,15 +60,16 @@ for ch in $chainNames ; do
 		else
 			iptables -R YAMONv40_${ch} 1 -j ${status} -m comment --comment "$comment"
 		fi
+		Send2Log "Block: iptables - status of chain 'YAMONv40_${ch}' set to '${status}' $(IndentList $(iptables -L YAMONv40_${ch} | grep 'anywhere'))" 2
 	fi
 	if [ "$ip6Enabled" == '1' ] ; then
 		if [ -z "$(ip6tables -L | grep Chain | grep "YAMONv40_${ch}")" ] ; then
 			Send2Log "Block: Chain YAMONv40_${ch} does not exist in ip6tables" 1
 		else
 			ip6tables -R YAMONv40_${ch} 1 -j ${status}
+			Send2Log "Block: ip6tables - status of chain 'YAMONv40_${ch}' set to '${status}' $(IndentList $(ip6tables -L YAMONv40_${ch} | grep 'anywhere'))" 2
 		fi
 	fi
-	Send2Log "Block: $ruleName - status of chain 'YAMONv40_${ch}' set to '${status}' $(IndentList $(iptables -L YAMONv40_${ch} | grep 'anywhere'))" 2
 done
 unset IFS
 Send2Log "Block: done" 0
