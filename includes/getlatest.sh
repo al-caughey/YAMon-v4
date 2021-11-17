@@ -16,7 +16,7 @@ getlatest()
 	#echo "getlatest: $1 / $2 / $3" >&2
 	local path=$1
 	#spath="${path/.sh/.html}"
-	local src="http://www.usage-monitoring.com/$directory/YAMon4/Setup/${path}?$_ts"
+	local src="https://www.usage-monitoring.com/$directory/YAMon4/Setup/${path}?$_ts"
 	local dst="${YAMON}${path}"
 	local rm="$3"
 	
