@@ -76,7 +76,7 @@ Please send questions to install@usage-monitoring.com.
 	fi
 done
 
-baseurl='http://usage-monitoring.com'
+baseurl='https://usage-monitoring.com'
 
 echo "
 
